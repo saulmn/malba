@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clean_house_app
+    ports:
+      - "3000:4173"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/pos_app
+      - VITE_AWS_REGION=${VITE_AWS_REGION:-auto}
+      - VITE_AWS_ACCESS_KEY_ID=${VITE_AWS_ACCESS_KEY_ID:-}
+      - VITE_AWS_SECRET_ACCESS_KEY=${VITE_AWS_SECRET_ACCESS_KEY:-}
+      - VITE_AWS_ENDPOINT=${VITE_AWS_ENDPOINT:-}
+      - VITE_AWS_BUCKET_NAME=${VITE_AWS_BUCKET_NAME:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - clean_house_net
+    # El comando para empujar esquemas a la BD antes de iniciar la app
+    command: >
+      sh -c "pnpm exec drizzle-kit push --force && pnpm preview --host 0.0.0.0"
+
+  db:
+    image: postgres:15-alpine
+    container_name: clean_house_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=pos_app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - clean_house_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pos_app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+networks:
+  clean_house_net:
