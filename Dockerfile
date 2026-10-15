@@ -28,11 +28,12 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-workspace.yaml* ./
 COPY --from=builder /app/vite.config.ts ./
 COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/tsr.config.json* ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/drizzle.config.ts ./
 COPY --from=builder /app/drizzle ./drizzle
-COPY --from=builder /app/src/db ./src/db
+COPY --from=builder /app/src ./src
 
 ENV PORT=4173
 EXPOSE 4173
