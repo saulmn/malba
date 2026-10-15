@@ -6,7 +6,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-export function ProductForm({ onSubmit, onCancel, defaultValues }: { onSubmit: (data: ProductFormValues) => void, onCancel?: () => void, defaultValues?: Partial<ProductFormValues> }) {
+export function ProductForm({
+  onSubmit,
+  onCancel,
+  defaultValues,
+  suppliers,
+}: {
+  onSubmit: (data: ProductFormValues) => void
+  onCancel?: () => void
+  defaultValues?: Partial<ProductFormValues>
+  suppliers?: Array<{ id: number; name: string }>
+}) {
   const { register, handleSubmit, setValue, getValues, formState: { errors } } = useForm<ProductFormValues>({
     // @ts-expect-error Zod resolver typing mismatch
     resolver: zodResolver(productSchema),
@@ -15,7 +25,8 @@ export function ProductForm({ onSubmit, onCancel, defaultValues }: { onSubmit: (
       minStock: 5,
       margin: 0,
       cost: 0,
-      price: 0
+      price: 0,
+      supplierId: null,
     }
   })
 
@@ -125,6 +136,22 @@ export function ProductForm({ onSubmit, onCancel, defaultValues }: { onSubmit: (
           <Input id="minStock" type="number" step="0.01" {...register('minStock')} />
           {errors.minStock && <p className="text-sm text-red-500">{errors.minStock.message}</p>}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="supplierId">Proveedor (Opcional)</Label>
+        <select 
+          id="supplierId" 
+          {...register('supplierId')}
+          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <option value="">Sin proveedor asignado</option>
+          {suppliers?.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-2">

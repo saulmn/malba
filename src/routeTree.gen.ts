@@ -10,11 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as ConfigRouteImport } from './routes/config'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as GastosRouteImport } from './routes/gastos'
 import { Route as InventarioRouteImport } from './routes/inventario'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MisVentasRouteImport } from './routes/mis-ventas'
+import { Route as ProveedoresRouteImport } from './routes/proveedores'
 import { Route as SucursalesRouteImport } from './routes/sucursales'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as VentasRouteImport } from './routes/ventas'
@@ -22,6 +25,11 @@ import { Route as VentasRouteImport } from './routes/ventas'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientesRoute = ClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfigRoute = ConfigRouteImport.update({
@@ -32,6 +40,11 @@ const ConfigRoute = ConfigRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GastosRoute = GastosRouteImport.update({
+  id: '/gastos',
+  path: '/gastos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InventarioRoute = InventarioRouteImport.update({
@@ -47,6 +60,11 @@ const LoginRoute = LoginRouteImport.update({
 const MisVentasRoute = MisVentasRouteImport.update({
   id: '/mis-ventas',
   path: '/mis-ventas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProveedoresRoute = ProveedoresRouteImport.update({
+  id: '/proveedores',
+  path: '/proveedores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SucursalesRoute = SucursalesRouteImport.update({
@@ -67,22 +85,28 @@ const VentasRoute = VentasRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRoute
   '/config': typeof ConfigRoute
   '/dashboard': typeof DashboardRoute
+  '/gastos': typeof GastosRoute
   '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/mis-ventas': typeof MisVentasRoute
+  '/proveedores': typeof ProveedoresRoute
   '/sucursales': typeof SucursalesRoute
   '/usuarios': typeof UsuariosRoute
   '/ventas': typeof VentasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRoute
   '/config': typeof ConfigRoute
   '/dashboard': typeof DashboardRoute
+  '/gastos': typeof GastosRoute
   '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/mis-ventas': typeof MisVentasRoute
+  '/proveedores': typeof ProveedoresRoute
   '/sucursales': typeof SucursalesRoute
   '/usuarios': typeof UsuariosRoute
   '/ventas': typeof VentasRoute
@@ -90,11 +114,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRoute
   '/config': typeof ConfigRoute
   '/dashboard': typeof DashboardRoute
+  '/gastos': typeof GastosRoute
   '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/mis-ventas': typeof MisVentasRoute
+  '/proveedores': typeof ProveedoresRoute
   '/sucursales': typeof SucursalesRoute
   '/usuarios': typeof UsuariosRoute
   '/ventas': typeof VentasRoute
@@ -103,33 +130,42 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/clientes'
     | '/config'
     | '/dashboard'
+    | '/gastos'
     | '/inventario'
     | '/login'
     | '/mis-ventas'
+    | '/proveedores'
     | '/sucursales'
     | '/usuarios'
     | '/ventas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/clientes'
     | '/config'
     | '/dashboard'
+    | '/gastos'
     | '/inventario'
     | '/login'
     | '/mis-ventas'
+    | '/proveedores'
     | '/sucursales'
     | '/usuarios'
     | '/ventas'
   id:
     | '__root__'
     | '/'
+    | '/clientes'
     | '/config'
     | '/dashboard'
+    | '/gastos'
     | '/inventario'
     | '/login'
     | '/mis-ventas'
+    | '/proveedores'
     | '/sucursales'
     | '/usuarios'
     | '/ventas'
@@ -137,11 +173,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClientesRoute: typeof ClientesRoute
   ConfigRoute: typeof ConfigRoute
   DashboardRoute: typeof DashboardRoute
+  GastosRoute: typeof GastosRoute
   InventarioRoute: typeof InventarioRoute
   LoginRoute: typeof LoginRoute
   MisVentasRoute: typeof MisVentasRoute
+  ProveedoresRoute: typeof ProveedoresRoute
   SucursalesRoute: typeof SucursalesRoute
   UsuariosRoute: typeof UsuariosRoute
   VentasRoute: typeof VentasRoute
@@ -156,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes': {
+      id: '/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof ClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/config': {
       id: '/config'
       path: '/config'
@@ -168,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gastos': {
+      id: '/gastos'
+      path: '/gastos'
+      fullPath: '/gastos'
+      preLoaderRoute: typeof GastosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inventario': {
@@ -189,6 +242,13 @@ declare module '@tanstack/react-router' {
       path: '/mis-ventas'
       fullPath: '/mis-ventas'
       preLoaderRoute: typeof MisVentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proveedores': {
+      id: '/proveedores'
+      path: '/proveedores'
+      fullPath: '/proveedores'
+      preLoaderRoute: typeof ProveedoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sucursales': {
@@ -217,11 +277,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClientesRoute: ClientesRoute,
   ConfigRoute: ConfigRoute,
   DashboardRoute: DashboardRoute,
+  GastosRoute: GastosRoute,
   InventarioRoute: InventarioRoute,
   LoginRoute: LoginRoute,
   MisVentasRoute: MisVentasRoute,
+  ProveedoresRoute: ProveedoresRoute,
   SucursalesRoute: SucursalesRoute,
   UsuariosRoute: UsuariosRoute,
   VentasRoute: VentasRoute,

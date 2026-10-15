@@ -57,6 +57,13 @@
       "when": 1792103627952,
       "tag": "0007_cooing_captain_midlands",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792104934750,
+      "tag": "0008_new_thing",
+      "breakpoints": true
     }
   ]
 }

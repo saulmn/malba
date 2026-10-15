@@ -83,12 +83,47 @@ export const registerSessions = pgTable("register_sessions", {
 	difference: numeric("difference", { precision: 12, scale: 2 }),
 });
 
-// 4. Catálogo de Productos e Inventarios
+// 4. Proveedores y Clientes
+export const suppliers = pgTable("suppliers", {
+	id: serial("id").primaryKey(),
+	workspaceId: integer("workspace_id")
+		.references(() => workspaces.id)
+		.notNull(),
+	name: text("name").notNull(),
+	description: varchar("description", { length: 3000 }),
+	phone1: text("phone_1"),
+	phone2: text("phone_2"),
+	phone3: text("phone_3"),
+	email: text("email"),
+	web: text("web"),
+	address: text("address"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const customers = pgTable("customers", {
+	id: serial("id").primaryKey(),
+	workspaceId: integer("workspace_id")
+		.references(() => workspaces.id)
+		.notNull(),
+	name: text("name").notNull(),
+	notes: varchar("notes", { length: 3000 }),
+	phone1: text("phone_1"),
+	phone2: text("phone_2"),
+	email: text("email"),
+	web: text("web"),
+	address: text("address"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// 5. Catálogo de Productos e Inventarios
 export const products = pgTable("products", {
 	id: serial("id").primaryKey(),
 	workspaceId: integer("workspace_id")
 		.references(() => workspaces.id)
 		.notNull(),
+	supplierId: integer("supplier_id").references(() => suppliers.id, {
+		onDelete: "set null",
+	}),
 	name: text("name").notNull(),
 	category: text("category"),
 	price: numeric("price", { precision: 12, scale: 2 }).notNull(),
@@ -133,12 +168,15 @@ export const inventoryMovements = pgTable("inventory_movements", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// 5. Ventas y Transacciones (Ingresos/Egresos)
+// 6. Ventas y Transacciones (Ingresos/Egresos)
 export const transactions = pgTable("transactions", {
 	id: serial("id").primaryKey(),
 	registerSessionId: integer("register_session_id")
 		.references(() => registerSessions.id)
 		.notNull(),
+	customerId: integer("customer_id").references(() => customers.id, {
+		onDelete: "set null",
+	}),
 	type: transactionTypeEnum("type").notNull(), // income = Venta, outcome = Gasto
 	total: numeric("total", { precision: 12, scale: 2 }).notNull(),
 	description: text("description"),
@@ -153,6 +191,30 @@ export const transactionItems = pgTable("transaction_items", {
 	productId: integer("product_id").references(() => products.id),
 	quantity: numeric("quantity", { precision: 10, scale: 3 }).notNull(),
 	price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+});
+
+// 7. Gastos Operativos y Compras a Proveedores
+export const expenses = pgTable("expenses", {
+	id: serial("id").primaryKey(),
+	workspaceId: integer("workspace_id")
+		.references(() => workspaces.id)
+		.notNull(),
+	supplierId: integer("supplier_id").references(() => suppliers.id, {
+		onDelete: "set null",
+	}),
+	registerSessionId: integer("register_session_id").references(
+		() => registerSessions.id,
+		{ onDelete: "set null" },
+	),
+	userId: integer("user_id")
+		.references(() => users.id)
+		.notNull(),
+	title: text("title").notNull(),
+	description: varchar("description", { length: 3000 }),
+	amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+	paymentMethod: text("payment_method").notNull().default("cash_register"), // 'cash_register' | 'transfer' | 'card' | 'other'
+	date: timestamp("date").defaultNow().notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 import { relations } from "drizzle-orm";
@@ -171,6 +233,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 		fields: [users.activeStore],
 		references: [workspaces.id],
 	}),
+	expenses: many(expenses),
 }));
 
 export const workspacesRelations = relations(workspaces, ({ many }) => ({
@@ -178,6 +241,9 @@ export const workspacesRelations = relations(workspaces, ({ many }) => ({
 	products: many(products),
 	inventory: many(inventory),
 	registerSessions: many(registerSessions),
+	suppliers: many(suppliers),
+	customers: many(customers),
+	expenses: many(expenses),
 }));
 
 export const workspaceUsersRelations = relations(workspaceUsers, ({ one }) => ({
@@ -188,5 +254,66 @@ export const workspaceUsersRelations = relations(workspaceUsers, ({ one }) => ({
 	workspace: one(workspaces, {
 		fields: [workspaceUsers.workspaceId],
 		references: [workspaces.id],
+	}),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ one, many }) => ({
+	workspace: one(workspaces, {
+		fields: [suppliers.workspaceId],
+		references: [workspaces.id],
+	}),
+	products: many(products),
+	expenses: many(expenses),
+}));
+
+export const customersRelations = relations(customers, ({ one, many }) => ({
+	workspace: one(workspaces, {
+		fields: [customers.workspaceId],
+		references: [workspaces.id],
+	}),
+	transactions: many(transactions),
+}));
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+	workspace: one(workspaces, {
+		fields: [products.workspaceId],
+		references: [workspaces.id],
+	}),
+	supplier: one(suppliers, {
+		fields: [products.supplierId],
+		references: [suppliers.id],
+	}),
+	inventory: many(inventory),
+	transactionItems: many(transactionItems),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one, many }) => ({
+	registerSession: one(registerSessions, {
+		fields: [transactions.registerSessionId],
+		references: [registerSessions.id],
+	}),
+	customer: one(customers, {
+		fields: [transactions.customerId],
+		references: [customers.id],
+	}),
+	items: many(transactionItems),
+}));
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+	workspace: one(workspaces, {
+		fields: [expenses.workspaceId],
+		references: [workspaces.id],
+	}),
+	supplier: one(suppliers, {
+		fields: [expenses.supplierId],
+		references: [suppliers.id],
+	}),
+	registerSession: one(registerSessions, {
+		fields: [expenses.registerSessionId],
+		references: [registerSessions.id],
+	}),
+	user: one(users, {
+		fields: [expenses.userId],
+		references: [users.id],
 	}),
 }));

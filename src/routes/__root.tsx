@@ -14,9 +14,12 @@ import {
 	Home,
 	LogOut,
 	Package,
+	Receipt,
 	Settings,
 	ShoppingCart,
 	Store,
+	Truck,
+	UserCheck,
 	Users,
 } from "lucide-react";
 import {
@@ -70,6 +73,9 @@ const menuItems = [
 	{ title: "Ventas", url: "/ventas", icon: ShoppingCart },
 	{ title: "Mis Ventas", url: "/mis-ventas", icon: FileText },
 	{ title: "Inventario", url: "/inventario", icon: Package },
+	{ title: "Proveedores", url: "/proveedores", icon: Truck },
+	{ title: "Clientes", url: "/clientes", icon: UserCheck },
+	{ title: "Gastos", url: "/gastos", icon: Receipt },
 	{ title: "Dashboard", url: "/dashboard", icon: BarChart },
 	{ title: "Sucursales", url: "/sucursales", icon: Store },
 	{ title: "Usuarios", url: "/usuarios", icon: Users },

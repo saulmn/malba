@@ -8,16 +8,28 @@ import { formatCurrency } from '@/utils/format'
 
 export const checkoutSchema = z.object({
   received: z.coerce.number().min(0, 'La cantidad recibida debe ser positiva'),
+  customerId: z.coerce.number().optional().nullable(),
 })
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>
 
-export function CheckoutForm({ total, onSubmit, onCancel }: { total: number, onSubmit: (data: CheckoutFormValues) => void, onCancel?: () => void }) {
+export function CheckoutForm({
+  total,
+  customers = [],
+  onSubmit,
+  onCancel,
+}: {
+  total: number
+  customers?: Array<{ id: number; name: string; phone1?: string | null }>
+  onSubmit: (data: CheckoutFormValues) => void
+  onCancel?: () => void
+}) {
   const { register, handleSubmit, control, formState: { errors } } = useForm<CheckoutFormValues>({
     // @ts-expect-error Zod resolver typing mismatch
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      received: total
+      received: total,
+      customerId: null,
     }
   })
 
@@ -32,7 +44,23 @@ export function CheckoutForm({ total, onSubmit, onCancel }: { total: number, onS
         <span className="text-3xl font-bold text-primary">{formatCurrency(total)}</span>
       </div>
 
-      <div className="space-y-2 pt-2">
+      <div className="space-y-1.5">
+        <Label htmlFor="customerId" className="text-sm">Cliente (Opcional)</Label>
+        <select
+          id="customerId"
+          {...register('customerId')}
+          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <option value="">Público General (Mostrador)</option>
+          {customers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} {c.phone1 ? `(${c.phone1})` : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2 pt-1">
         <Label htmlFor="received" className="text-lg">Efectivo Recibido</Label>
         <Input 
           id="received" 

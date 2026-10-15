@@ -10,6 +10,7 @@ type CheckoutPayload = {
   total: number
   workspaceId?: number
   registerSessionId: number
+  customerId?: number | null
 }
 
 export const createSaleFn = createServerFn({ method: 'POST' })
@@ -21,6 +22,7 @@ export const createSaleFn = createServerFn({ method: 'POST' })
     // 1. Create transaction
     const [transaction] = await db.insert(transactions).values({
       registerSessionId: data.registerSessionId,
+      customerId: data.customerId || null,
       type: 'income',
       total: data.total.toString(),
       description: 'Venta POS',

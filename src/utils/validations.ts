@@ -15,6 +15,7 @@ export const productSchema = z.object({
 		.min(0, "El stock mínimo no puede ser negativo")
 		.default(5),
 	unit: z.enum(["piece", "liter", "kilo", "package"]),
+	supplierId: z.coerce.number().optional().nullable(),
 	image: z.any().optional(),
 	imageUrl: z.string().optional(),
 });
@@ -40,3 +41,39 @@ export const userSchema = z.object({
 });
 
 export type UserFormValues = z.infer<typeof userSchema>;
+
+export const supplierSchema = z.object({
+	name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+	description: z.string().max(3000, "La descripción no puede superar 3000 caracteres").optional(),
+	phone1: z.string().optional(),
+	phone2: z.string().optional(),
+	phone3: z.string().optional(),
+	email: z.string().email("Correo no válido").optional().or(z.literal("")),
+	web: z.string().optional(),
+	address: z.string().optional(),
+});
+
+export type SupplierFormValues = z.infer<typeof supplierSchema>;
+
+export const customerSchema = z.object({
+	name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+	notes: z.string().max(3000, "Las notas no pueden superar 3000 caracteres").optional(),
+	phone1: z.string().optional(),
+	phone2: z.string().optional(),
+	email: z.string().email("Correo no válido").optional().or(z.literal("")),
+	web: z.string().optional(),
+	address: z.string().optional(),
+});
+
+export type CustomerFormValues = z.infer<typeof customerSchema>;
+
+export const expenseSchema = z.object({
+	title: z.string().min(2, "El título debe tener al menos 2 caracteres"),
+	description: z.string().max(3000, "La descripción no puede superar 3000 caracteres").optional(),
+	supplierId: z.coerce.number().optional().nullable(),
+	amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
+	paymentMethod: z.enum(["cash_register", "transfer", "card", "other"]).default("cash_register"),
+	date: z.string().optional(),
+});
+
+export type ExpenseFormValues = z.infer<typeof expenseSchema>;

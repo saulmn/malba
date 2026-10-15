@@ -25,7 +25,7 @@ type OrderItem = {
 }
 
 export function PosScreen() {
-  const { products, currentRegister } = Route.useLoaderData()
+  const { products, currentRegister, customers = [] } = Route.useLoaderData()
 
   const [order, setOrder] = useState<OrderItem[]>([])
   const [search, setSearch] = useState('')
@@ -93,6 +93,7 @@ export function PosScreen() {
           total: total,
           workspaceId: currentRegister.workspaceId,
           registerSessionId: currentRegister.id,
+          customerId: data.customerId || null,
         }
       })
       toast.success("Venta guardada exitosamente", {
@@ -266,6 +267,7 @@ export function PosScreen() {
           >
             <CheckoutForm 
               total={total} 
+              customers={customers}
               onSubmit={handlePay} 
               onCancel={() => setIsCheckoutOpen(false)} 
             />

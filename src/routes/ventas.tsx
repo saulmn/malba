@@ -6,13 +6,15 @@ export const Route = createFileRoute('/ventas')({
   loader: async () => {
     const { getInventoryFn } = await import('@/server/inventory')
     const { getCurrentRegisterFn } = await import('@/server/registers')
+    const { getCustomersFn } = await import('@/server/customers')
     
-    const [products, currentRegister] = await Promise.all([
+    const [products, currentRegister, customers] = await Promise.all([
       getInventoryFn(),
-      getCurrentRegisterFn()
+      getCurrentRegisterFn(),
+      getCustomersFn()
     ])
     
-    return { products, currentRegister }
+    return { products, currentRegister, customers }
   },
 })
 
