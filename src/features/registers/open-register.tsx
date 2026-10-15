@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,11 +24,11 @@ export function OpenRegisterScreen() {
           startingBalance: parseFloat(balance) || 0
         }
       })
-      alert("Caja abierta exitosamente")
+      toast.success("Caja abierta exitosamente")
       router.invalidate() // Recarga la ruta para obtener el nuevo register
     } catch (error) {
       console.error(error)
-      alert("Error al abrir caja")
+      toast.error("Error al abrir caja")
     } finally {
       setLoading(false)
     }

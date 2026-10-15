@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
@@ -23,11 +24,11 @@ function RouteComponent() {
   const handleCreateWorkspace = async (formData: WorkspaceFormValues) => {
     try {
       await createWorkspaceFn({ data: formData })
-      alert("Sucursal creada exitosamente")
+      toast.success("Sucursal creada exitosamente")
       setIsDialogOpen(false)
       router.invalidate() // Reload data
     } catch (error) {
-      alert("Error al crear sucursal")
+      toast.error("Error al crear sucursal")
       console.error(error)
     }
   }

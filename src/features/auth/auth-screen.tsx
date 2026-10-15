@@ -1,5 +1,6 @@
-﻿import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -27,16 +28,19 @@ export function LoginScreen() {
 
 		try {
 			if (identifier && password) {
-				// En una app real, la contraseña serí­a verificada
 				const result = await loginFn({ data: { identifier, password } });
 				if (result?.success) {
+					toast.success("Sesión iniciada correctamente");
 					navigate({ to: "/" });
 				}
 			} else {
 				setError("Por favor, ingresa correo y contraseña.");
+				toast.error("Por favor, ingresa correo y contraseña.");
 			}
 		} catch (err: any) {
-			setError(err.message || "Error al iniciar sesión");
+			const msg = err.message || "Error al iniciar sesión";
+			setError(msg);
+			toast.error(msg);
 		} finally {
 			setLoading(false);
 		}

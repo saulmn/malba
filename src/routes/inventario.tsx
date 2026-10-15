@@ -1,6 +1,7 @@
-﻿import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { AlertTriangle, Edit2, Plus, Search } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -62,7 +63,7 @@ function RouteComponent() {
 						imageUrl: finalImageUrl || undefined,
 					},
 				});
-				alert("Producto actualizado exitosamente");
+				toast.success("Producto actualizado exitosamente");
 			} else {
 				await createProductFn({
 					data: {
@@ -71,13 +72,13 @@ function RouteComponent() {
 						workspaceId: 1, // Hardcoded for now
 					},
 				});
-				alert("Producto creado exitosamente");
+				toast.success("Producto creado exitosamente");
 			}
 			setIsDialogOpen(false);
 			setEditingItem(null);
 			router.invalidate();
 		} catch (error) {
-			alert("Error al guardar producto");
+			toast.error("Error al guardar producto");
 			console.error(error);
 		}
 	};

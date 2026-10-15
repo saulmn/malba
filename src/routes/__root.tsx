@@ -55,7 +55,7 @@ export const Route = createRootRoute({
 		],
 		links: [
 			{ rel: "stylesheet", href: appCss },
-			{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+			{ rel: "icon", href: "/favicon.ico" },
 		],
 	}),
 	shellComponent: RootDocument,
@@ -110,6 +110,7 @@ function AppSidebar() {
 import { useLocation } from "@tanstack/react-router";
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	const location = useLocation();
@@ -156,6 +157,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						},
 					]}
 				/>
+				<Toaster />
 				<Scripts />
 			</body>
 		</html>

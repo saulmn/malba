@@ -1,4 +1,5 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -94,11 +95,14 @@ export function PosScreen() {
           registerSessionId: currentRegister.id,
         }
       })
-      alert(`Venta guardada. Cobrando ${formatCurrency(total)}. Recibido: ${formatCurrency(data.received)}. Cambio: ${formatCurrency(data.received - total)}`)
+      toast.success("Venta guardada exitosamente", {
+        description: `Total: ${formatCurrency(total)} | Recibido: ${formatCurrency(data.received)} | Cambio: ${formatCurrency(data.received - total)}`,
+        duration: 5000,
+      })
       setOrder([])
       setIsCheckoutOpen(false)
     } catch (error) {
-      alert("Error al procesar la venta")
+      toast.error("Error al procesar la venta")
       console.error(error)
     }
   }

@@ -1,5 +1,6 @@
-﻿import { useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,11 +44,13 @@ export function CloseRegisterForm({
 					difference: diff,
 				},
 			});
-			alert(`Caja cerrada. Diferencia: ${formatCurrency(diff)}`);
+			toast.success("Caja cerrada exitosamente", {
+				description: `Diferencia: ${formatCurrency(diff)}`,
+			});
 			router.invalidate();
 			onCancel();
 		} catch (error) {
-			alert("Error al cerrar caja");
+			toast.error("Error al cerrar caja");
 			console.error(error);
 		} finally {
 			setLoading(false);

@@ -1,5 +1,6 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
@@ -23,11 +24,11 @@ function RouteComponent() {
   const handleCreateUser = async (formData: UserFormValues) => {
     try {
       await createUserFn({ data: formData })
-      alert("Usuario creado exitosamente")
+      toast.success("Usuario creado exitosamente")
       setIsDialogOpen(false)
       router.invalidate() // Reload data
     } catch (error) {
-      alert("Error al crear usuario")
+      toast.error("Error al crear usuario")
       console.error(error)
     }
   }
