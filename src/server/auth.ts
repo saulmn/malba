@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { db } from '@/db'
 import { users, authSessions } from '@/db/schema'
 import { eq, or } from 'drizzle-orm'
-import { setCookie, getCookie, deleteCookie } from 'vinxi/http'
+import { setCookie, getCookie, deleteCookie } from '@tanstack/react-start/server'
 // Using simple random token for demonstration
 import { randomBytes } from 'crypto'
 
