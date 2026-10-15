@@ -2,6 +2,7 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import {
 	createRootRoute,
 	HeadContent,
+	Link,
 	redirect,
 	Scripts,
 	useLocation,
@@ -109,7 +110,7 @@ function AppSidebar() {
 										<SidebarMenuButton
 											tooltip={item.title}
 											isActive={isActive}
-											render={<a href={item.url} />}
+											render={<Link to={item.url} />}
 										>
 											<item.icon className="size-4 shrink-0" />
 											<span className="truncate group-data-[collapsible=icon]:hidden">
