@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Sun, Moon, Laptop } from 'lucide-react'
 
 type ThemeMode = 'light' | 'dark' | 'auto'
 
@@ -64,8 +65,10 @@ export default function ThemeToggle() {
 
   const label =
     mode === 'auto'
-      ? 'Theme mode: auto (system). Click to switch to light mode.'
-      : `Theme mode: ${mode}. Click to switch mode.`
+      ? 'Tema: automático (sistema). Clic para cambiar.'
+      : mode === 'dark'
+        ? 'Tema: oscuro. Clic para cambiar.'
+        : 'Tema: claro. Clic para cambiar.'
 
   return (
     <button
@@ -73,9 +76,16 @@ export default function ThemeToggle() {
       onClick={toggleMode}
       aria-label={label}
       title={label}
-      className="rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm font-semibold text-[var(--sea-ink)] shadow-[0_8px_22px_rgba(30,90,72,0.08)] transition hover:-translate-y-0.5"
+      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-secondary/40 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring"
     >
-      {mode === 'auto' ? 'Auto' : mode === 'dark' ? 'Dark' : 'Light'}
+      {mode === 'dark' ? (
+        <Moon className="h-3.5 w-3.5 text-primary" />
+      ) : mode === 'light' ? (
+        <Sun className="h-3.5 w-3.5 text-amber-500" />
+      ) : (
+        <Laptop className="h-3.5 w-3.5 text-muted-foreground" />
+      )}
+      <span className="capitalize">{mode === 'auto' ? 'Auto' : mode === 'dark' ? 'Oscuro' : 'Claro'}</span>
     </button>
   )
 }

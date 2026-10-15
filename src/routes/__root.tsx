@@ -97,7 +97,7 @@ function AppSidebar() {
 			<div className="p-4 mt-auto border-t border-sidebar-border">
 				<button
 					onClick={() => (window.location.href = "/login")}
-					className="flex items-center gap-2 w-full px-2 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 transition-colors"
+					className="flex items-center gap-2 w-full px-2 py-2 text-sm font-medium text-destructive rounded-md hover:bg-destructive/10 transition-colors"
 				>
 					<LogOut size={18} />
 					Cerrar Sesión
@@ -109,6 +109,7 @@ function AppSidebar() {
 
 import { useLocation } from "@tanstack/react-router";
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
+import ThemeToggle from "@/components/ThemeToggle";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -122,7 +123,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 				<HeadContent />
 			</head>
-			<body className="font-sans antialiased bg-background text-foreground selection:bg-[rgba(79,184,178,0.24)]">
+			<body className="font-sans antialiased bg-background text-foreground selection:bg-[#D1E8FF] selection:text-[#0B1957]">
 				{isLogin ? (
 					children
 				) : (
@@ -131,14 +132,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							<div className="flex w-full h-screen overflow-hidden">
 								<AppSidebar />
 								<main className="flex-1 overflow-y-auto flex flex-col">
-									<header className="px-4 h-14 flex shrink-0 items-center justify-between border-b bg-background">
+									<header className="px-4 h-14 flex shrink-0 items-center justify-between border-b bg-card">
 										<div className="flex items-center gap-2">
 											<SidebarTrigger />
 											<h1 className="font-bold text-lg md:hidden">
 												Punto de Venta
 											</h1>
 										</div>
-										<div className="flex items-center gap-4">
+										<div className="flex items-center gap-3">
+											<ThemeToggle />
 											<NotificationsDropdown />
 										</div>
 									</header>

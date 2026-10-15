@@ -240,7 +240,7 @@ export function PosScreen() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-red-500 h-8 w-8 hover:bg-red-500/10 hover:text-red-600"
+                      className="text-destructive h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => removeFromOrder(item.id)}
                     >
                       <Trash2 size={16} />

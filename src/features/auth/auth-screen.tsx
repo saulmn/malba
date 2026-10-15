@@ -47,7 +47,7 @@ export function LoginScreen() {
 	};
 
 	return (
-		<div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+		<div className="flex items-center justify-center min-h-screen bg-background p-4">
 			<Card className="w-full max-w-md shadow-lg border-t-4 border-t-primary">
 				<CardHeader className="space-y-1">
 					<CardTitle className="text-2xl font-bold text-center">
@@ -60,7 +60,7 @@ export function LoginScreen() {
 				<form onSubmit={handleLogin}>
 					<CardContent className="space-y-4">
 						{error && (
-							<div className="p-3 bg-red-100 text-red-700 rounded-md text-sm">
+							<div className="p-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-md text-sm font-medium">
 								{error}
 							</div>
 						)}

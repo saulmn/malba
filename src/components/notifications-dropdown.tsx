@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Bell, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -23,7 +23,7 @@ export function NotificationsDropdown() {
         <Button variant="ghost" size="icon" className="relative h-8 w-8">
           <Bell className="h-5 w-5" />
           {notifications.length > 0 && (
-            <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-background" />
+            <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-destructive border-2 border-background" />
           )}
         </Button>
       } />
@@ -44,7 +44,7 @@ export function NotificationsDropdown() {
             <div className="flex flex-col">
               {notifications.map((notif) => (
                 <div key={notif.id} className="flex items-start gap-3 p-4 border-b last:border-0 hover:bg-muted/50 transition-colors">
-                  <div className="bg-red-100 text-red-600 p-2 rounded-full dark:bg-red-900/30 dark:text-red-400">
+                  <div className="bg-destructive/15 text-destructive p-2 rounded-full">
                     <AlertTriangle size={16} />
                   </div>
                   <div className="flex flex-col gap-1">
