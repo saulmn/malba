@@ -53,10 +53,5 @@
     "vinxi": "^0.5.11",
     "vite": "^8.0.0"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lightningcss"
-    ]
-  }
+  "packageManager": "pnpm@11.23.0"
 }
