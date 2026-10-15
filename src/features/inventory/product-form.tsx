@@ -115,6 +115,7 @@ export function ProductForm({ onSubmit, onCancel, defaultValues }: { onSubmit: (
             <option value="piece">Pieza</option>
             <option value="liter">Litro</option>
             <option value="kilo">Kilo</option>
+            <option value="package">Paquete</option>
           </select>
           {errors.unit && <p className="text-sm text-red-500">{errors.unit.message}</p>}
         </div>

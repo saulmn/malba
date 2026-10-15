@@ -43,6 +43,13 @@
       "when": 1792094548217,
       "tag": "0005_many_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792102603888,
+      "tag": "0006_square_oracle",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-﻿import {
+import {
 	boolean,
 	integer,
 	numeric,
@@ -10,7 +10,7 @@
 	varchar,
 } from "drizzle-orm/pg-core";
 
-export const unitEnum = pgEnum("unit", ["piece", "liter", "kilo"]);
+export const unitEnum = pgEnum("unit", ["piece", "liter", "kilo", "package"]);
 export const transactionTypeEnum = pgEnum("transaction_type", [
 	"income",
 	"outcome",

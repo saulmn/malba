@@ -213,7 +213,9 @@ function RouteComponent() {
 															? "pz"
 															: item.unit === "liter"
 																? "L"
-																: "kg"}
+																: item.unit === "kilo"
+																	? "kg"
+																	: "paq"}
 														{Number(item.quantity) <=
 															Number(item.minStock || 5) && (
 															<AlertTriangle

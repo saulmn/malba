@@ -5,8 +5,9 @@ export const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-export const formatQuantity = (quantity: number, unit: 'piece' | 'liter' | 'kilo') => {
+export const formatQuantity = (quantity: number, unit: 'piece' | 'liter' | 'kilo' | 'package') => {
   if (unit === 'piece') return `${quantity} pz`
   if (unit === 'kilo') return `${quantity} kg`
+  if (unit === 'package') return `${quantity} paq`
   return `${quantity} L`
 }

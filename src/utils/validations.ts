@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
 export const productSchema = z.object({
 	name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -14,7 +14,7 @@ export const productSchema = z.object({
 		.number()
 		.min(0, "El stock mínimo no puede ser negativo")
 		.default(5),
-	unit: z.enum(["piece", "liter", "kilo"]),
+	unit: z.enum(["piece", "liter", "kilo", "package"]),
 	image: z.any().optional(),
 	imageUrl: z.string().optional(),
 });

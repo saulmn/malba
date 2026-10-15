@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -33,8 +33,8 @@ export function EditOrderItem({ item, onSave, onCancel }: EditOrderItemProps) {
     // Prevent division by zero
     if (item.price > 0) {
       const calcQty = num / item.price
-      // If piece, we probably shouldn't allow decimals, but for bulk we do.
-      if (item.unit === 'piece') {
+      // If piece or package, we probably shouldn't allow decimals, but for bulk we do.
+      if (item.unit === 'piece' || item.unit === 'package') {
         setQuantity(Math.floor(calcQty).toString())
       } else {
         setQuantity(calcQty.toFixed(3))
@@ -52,12 +52,12 @@ export function EditOrderItem({ item, onSave, onCancel }: EditOrderItemProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="qty">
-            Cantidad ({item.unit === 'piece' ? 'Pz' : item.unit === 'liter' ? 'Litros' : 'Kilos'})
+            Cantidad ({item.unit === 'piece' ? 'Pz' : item.unit === 'liter' ? 'Litros' : item.unit === 'kilo' ? 'Kilos' : 'Paquetes'})
           </Label>
           <Input 
             id="qty" 
             type="number" 
-            step={item.unit === 'piece' ? '1' : '0.001'}
+            step={item.unit === 'piece' || item.unit === 'package' ? '1' : '0.001'}
             value={quantity}
             onChange={(e) => handleQuantityChange(e.target.value)}
             autoFocus

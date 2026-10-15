@@ -161,7 +161,7 @@ export function PosScreen() {
                           </Badge>
                         )}
                         <Badge variant="outline">
-                        {product.unit === 'liter' ? 'Litros' : product.unit === 'kilo' ? 'Kilos' : 'PZ'}
+                        {product.unit === 'liter' ? 'Litros' : product.unit === 'kilo' ? 'Kilos' : product.unit === 'package' ? 'Paquete' : 'PZ'}
                       </Badge>
                     </div>
                     <CardTitle className="text-base mt-2 line-clamp-2 leading-tight">
@@ -172,7 +172,7 @@ export function PosScreen() {
                     <p className="font-bold text-lg text-primary">
                       {formatCurrency(Number(product.price))}
                       <span className="text-sm font-normal text-muted-foreground ml-1">
-                        /{product.unit === 'piece' ? 'unidad' : product.unit === 'liter' ? 'litro' : 'kilo'}
+                        /{product.unit === 'piece' ? 'unidad' : product.unit === 'liter' ? 'litro' : product.unit === 'kilo' ? 'kilo' : 'paquete'}
                       </span>
                     </p>
                   </CardContent>
