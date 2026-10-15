@@ -53,7 +53,10 @@ export const Route = createRootRoute({
 			{ name: "viewport", content: "width=device-width, initial-scale=1" },
 			{ title: "Punto de Venta" },
 		],
-		links: [{ rel: "stylesheet", href: appCss }],
+		links: [
+			{ rel: "stylesheet", href: appCss },
+			{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+		],
 	}),
 	shellComponent: RootDocument,
 });
@@ -66,7 +69,7 @@ const menuItems = [
 	{ title: "Dashboard", url: "/dashboard", icon: BarChart },
 	{ title: "Sucursales", url: "/sucursales", icon: Store },
 	{ title: "Usuarios", url: "/usuarios", icon: Users },
-	{ title: "ConfiguraciÃƒÂ³n", url: "/config", icon: Settings },
+	{ title: "Configuración", url: "/config", icon: Settings },
 ];
 
 function AppSidebar() {

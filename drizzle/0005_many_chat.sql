@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "min_stock" numeric(10, 3) DEFAULT '5' NOT NULL;
