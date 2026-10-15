@@ -33,11 +33,14 @@ export const userSchema = z.object({
 	username: z
 		.string()
 		.min(3, "El usuario debe tener al menos 3 caracteres")
-		.optional(),
+		.optional()
+		.or(z.literal("")),
 	name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
 	email: z.string().email("Debe ser un correo electrónico válido"),
-	password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+	password: z.string().optional().or(z.literal("")),
 	role: z.enum(["master", "admin", "manager", "staff"]).default("staff"),
+	activeStoreId: z.coerce.number().optional().nullable(),
+	workspaceIds: z.array(z.coerce.number()).optional(),
 });
 
 export type UserFormValues = z.infer<typeof userSchema>;
