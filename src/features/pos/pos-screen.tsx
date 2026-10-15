@@ -91,7 +91,7 @@ export function PosScreen() {
             price: item.price,
           })),
           total: total,
-          workspaceId: 1,
+          workspaceId: currentRegister.workspaceId,
           registerSessionId: currentRegister.id,
         }
       })

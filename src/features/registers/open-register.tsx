@@ -19,8 +19,6 @@ export function OpenRegisterScreen() {
     try {
       await openRegisterFn({
         data: {
-          workspaceId: 1, // Hardcoded for now
-          userId: 1, // Hardcoded for now
           startingBalance: parseFloat(balance) || 0
         }
       })

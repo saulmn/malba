@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { PosScreen } from '@/features/pos/pos-screen'
 
 export const Route = createFileRoute('/ventas')({
@@ -7,10 +7,9 @@ export const Route = createFileRoute('/ventas')({
     const { getInventoryFn } = await import('@/server/inventory')
     const { getCurrentRegisterFn } = await import('@/server/registers')
     
-    // Hardcoded workspaceId for now
     const [products, currentRegister] = await Promise.all([
       getInventoryFn(),
-      getCurrentRegisterFn({ data: { workspaceId: 1 } })
+      getCurrentRegisterFn()
     ])
     
     return { products, currentRegister }

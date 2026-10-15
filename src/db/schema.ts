@@ -31,6 +31,7 @@ export const users = pgTable("users", {
 	name: text("name").notNull(),
 	email: text("email").notNull().unique(),
 	passwordHash: text("password_hash").notNull(),
+	activeStore: integer("active_store").references(() => workspaces.id),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -163,6 +164,29 @@ export const authSessionsRelations = relations(authSessions, ({ one }) => ({
 	}),
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
 	authSessions: many(authSessions),
+	workspaceUsers: many(workspaceUsers),
+	activeWorkspace: one(workspaces, {
+		fields: [users.activeStore],
+		references: [workspaces.id],
+	}),
+}));
+
+export const workspacesRelations = relations(workspaces, ({ many }) => ({
+	workspaceUsers: many(workspaceUsers),
+	products: many(products),
+	inventory: many(inventory),
+	registerSessions: many(registerSessions),
+}));
+
+export const workspaceUsersRelations = relations(workspaceUsers, ({ one }) => ({
+	user: one(users, {
+		fields: [workspaceUsers.userId],
+		references: [users.id],
+	}),
+	workspace: one(workspaces, {
+		fields: [workspaceUsers.workspaceId],
+		references: [workspaces.id],
+	}),
 }));

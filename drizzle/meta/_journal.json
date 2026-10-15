@@ -50,6 +50,13 @@
       "when": 1792102603888,
       "tag": "0006_square_oracle",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792103627952,
+      "tag": "0007_cooing_captain_midlands",
+      "breakpoints": true
     }
   ]
 }

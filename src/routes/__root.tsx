@@ -146,6 +146,7 @@ function AppSidebar() {
 }
 
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
+import { StoreSelector } from "@/components/store-selector";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -170,11 +171,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 								<AppSidebar />
 								<main className="flex-1 overflow-y-auto flex flex-col">
 									<header className="px-4 h-14 flex shrink-0 items-center justify-between border-b bg-card">
-										<div className="flex items-center gap-2">
+										<div className="flex items-center gap-3">
 											<SidebarTrigger />
-											<h1 className="font-bold text-lg md:hidden">
-												Punto de Venta
-											</h1>
+											<StoreSelector />
 										</div>
 										<div className="flex items-center gap-3">
 											<ThemeToggle />

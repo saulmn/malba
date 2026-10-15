@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "active_store" integer;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_active_store_workspaces_id_fk" FOREIGN KEY ("active_store") REFERENCES "public"."workspaces"("id") ON DELETE no action ON UPDATE no action;

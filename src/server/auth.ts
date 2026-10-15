@@ -4,11 +4,10 @@ import {
 	getCookie,
 	setCookie,
 } from "@tanstack/react-start/server";
-// Using simple random token for demonstration
 import { randomBytes } from "crypto";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { db } from "@/db";
-import { authSessions, users } from "@/db/schema";
+import { authSessions, users, workspaces, workspaceUsers } from "@/db/schema";
 
 export const loginFn = createServerFn({ method: "POST" })
 	.validator((data: { identifier: string; password: string }) => data)
@@ -27,6 +26,34 @@ export const loginFn = createServerFn({ method: "POST" })
 
 		if (user.passwordHash !== `hashed_${data.password}`) {
 			throw new Error("Contraseña incorrecta");
+		}
+
+		// Check/assign activeStore if not set or invalid
+		let activeStoreId = user.activeStore;
+		if (activeStoreId) {
+			const exists = await db.query.workspaces.findFirst({
+				where: eq(workspaces.id, activeStoreId),
+			});
+			if (!exists) activeStoreId = null;
+		}
+
+		if (!activeStoreId) {
+			if (user.role === "master") {
+				const firstWs = await db.query.workspaces.findFirst();
+				if (firstWs) activeStoreId = firstWs.id;
+			} else {
+				const firstWu = await db.query.workspaceUsers.findFirst({
+					where: eq(workspaceUsers.userId, user.id),
+				});
+				if (firstWu) activeStoreId = firstWu.workspaceId;
+			}
+
+			if (activeStoreId) {
+				await db
+					.update(users)
+					.set({ activeStore: activeStoreId })
+					.where(eq(users.id, user.id));
+			}
 		}
 
 		// 2. Create session
@@ -50,7 +77,13 @@ export const loginFn = createServerFn({ method: "POST" })
 
 		return {
 			success: true,
-			user: { id: user.id, name: user.name, email: user.email },
+			user: {
+				id: user.id,
+				name: user.name,
+				email: user.email,
+				role: user.role,
+				activeStore: activeStoreId,
+			},
 		};
 	});
 
@@ -71,7 +104,11 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(
 		const session = await db.query.authSessions.findFirst({
 			where: eq(authSessions.id, sessionId),
 			with: {
-				user: true,
+				user: {
+					with: {
+						activeWorkspace: true,
+					},
+				},
 			},
 		});
 
@@ -79,6 +116,53 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(
 			return null;
 		}
 
-		return session.user;
+		const user = session.user;
+
+		// If user doesn't have an activeWorkspace resolved, auto-resolve first accessible
+		if (!user.activeWorkspace) {
+			let storeId: number | null = null;
+			if (user.role === "master") {
+				const firstWs = await db.query.workspaces.findFirst();
+				if (firstWs) storeId = firstWs.id;
+			} else {
+				const firstWu = await db.query.workspaceUsers.findFirst({
+					where: eq(workspaceUsers.userId, user.id),
+				});
+				if (firstWu) storeId = firstWu.workspaceId;
+			}
+
+			if (storeId) {
+				await db
+					.update(users)
+					.set({ activeStore: storeId })
+					.where(eq(users.id, user.id));
+
+				const resolvedWs = await db.query.workspaces.findFirst({
+					where: eq(workspaces.id, storeId),
+				});
+
+				return {
+					...user,
+					activeStore: storeId,
+					activeWorkspace: resolvedWs || null,
+				};
+			}
+		}
+
+		return user;
 	},
 );
+
+export async function getAuthenticatedUserWithActiveStore() {
+	const user = await getSessionFn();
+	if (!user) {
+		throw new Error("No autenticado");
+	}
+	if (!user.activeStore) {
+		throw new Error("No tienes una sucursal activa asignada");
+	}
+	return {
+		user,
+		activeStoreId: user.activeStore,
+	};
+}

@@ -1,19 +1,23 @@
-﻿import { createServerFn } from '@tanstack/react-start'
+import { createServerFn } from '@tanstack/react-start'
 import { db } from '@/db'
 import { transactions, transactionItems } from '@/db/schema'
 import { eq, desc, and, sql } from 'drizzle-orm'
 import { registerSessions } from '@/db/schema'
+import { getAuthenticatedUserWithActiveStore } from './auth'
 
 type CheckoutPayload = {
   items: Array<{ productId: number; quantity: number; price: number }>
   total: number
-  workspaceId: number
+  workspaceId?: number
   registerSessionId: number
 }
 
 export const createSaleFn = createServerFn({ method: 'POST' })
   .validator((data: CheckoutPayload) => data)
   .handler(async ({ data }) => {
+    const auth = await getAuthenticatedUserWithActiveStore()
+    const workspaceId = data.workspaceId || auth.activeStoreId
+
     // 1. Create transaction
     const [transaction] = await db.insert(transactions).values({
       registerSessionId: data.registerSessionId,
@@ -31,12 +35,11 @@ export const createSaleFn = createServerFn({ method: 'POST' })
         price: item.price.toString(),
       })
 
-      // Deduct inventory
-      // Simple raw sql deduction
+      // Deduct inventory for active store
       await db.execute(sql`
         UPDATE inventory 
         SET quantity = quantity - ${item.quantity} 
-        WHERE product_id = ${item.productId} AND workspace_id = ${data.workspaceId}
+        WHERE product_id = ${item.productId} AND workspace_id = ${workspaceId}
       `)
     }
 
@@ -44,8 +47,12 @@ export const createSaleFn = createServerFn({ method: 'POST' })
   })
 
 export const getMySalesFn = createServerFn({ method: 'GET' })
-  .validator((data: { userId: number, period: 'today' | 'week' | 'month' | 'all' }) => data)
+  .validator((data: { userId?: number, period: 'today' | 'week' | 'month' | 'all' }) => data)
   .handler(async ({ data }) => {
+    const auth = await getAuthenticatedUserWithActiveStore()
+    const userId = data.userId || auth.user.id
+    const workspaceId = auth.activeStoreId
+
     let dateFilter;
     const now = new Date();
     if (data.period === 'today') {
@@ -62,7 +69,8 @@ export const getMySalesFn = createServerFn({ method: 'GET' })
 
     const conditions = [
       eq(transactions.type, 'income'),
-      eq(registerSessions.userId, data.userId)
+      eq(registerSessions.userId, userId),
+      eq(registerSessions.workspaceId, workspaceId)
     ];
     if (dateFilter) conditions.push(dateFilter);
 

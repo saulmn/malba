@@ -3,16 +3,22 @@ import { db } from '@/db'
 import { registerSessions, transactions } from '@/db/schema'
 import { eq, desc, and, sum, sql } from 'drizzle-orm'
 import { z } from 'zod'
+import { getAuthenticatedUserWithActiveStore } from './auth'
 
 export const getCurrentRegisterFn = createServerFn({ method: 'GET' })
-  .validator((data: { workspaceId: number }) => data)
+  .validator((data?: { workspaceId?: number }) => data || {})
   .handler(async ({ data }) => {
-    // Busca la sesión abierta para este workspace
+    let workspaceId = data.workspaceId
+    if (!workspaceId) {
+      const auth = await getAuthenticatedUserWithActiveStore()
+      workspaceId = auth.activeStoreId
+    }
+
     const [session] = await db.select()
       .from(registerSessions)
       .where(
         and(
-          eq(registerSessions.workspaceId, data.workspaceId),
+          eq(registerSessions.workspaceId, workspaceId),
           eq(registerSessions.status, 'open')
         )
       )
@@ -23,11 +29,15 @@ export const getCurrentRegisterFn = createServerFn({ method: 'GET' })
   })
 
 export const openRegisterFn = createServerFn({ method: 'POST' })
-  .validator((data: { workspaceId: number; userId: number; startingBalance: number }) => data)
+  .validator((data: { workspaceId?: number; userId?: number; startingBalance: number }) => data)
   .handler(async ({ data }) => {
+    const auth = await getAuthenticatedUserWithActiveStore()
+    const workspaceId = data.workspaceId || auth.activeStoreId
+    const userId = data.userId || auth.user.id
+
     const [newSession] = await db.insert(registerSessions).values({
-      workspaceId: data.workspaceId,
-      userId: data.userId,
+      workspaceId,
+      userId,
       startingBalance: data.startingBalance.toString(),
       status: 'open',
     }).returning()

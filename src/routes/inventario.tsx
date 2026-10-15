@@ -69,7 +69,6 @@ function RouteComponent() {
 					data: {
 						...formData,
 						imageUrl: finalImageUrl || undefined,
-						workspaceId: 1, // Hardcoded for now
 					},
 				});
 				toast.success("Producto creado exitosamente");

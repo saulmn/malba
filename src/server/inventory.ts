@@ -1,12 +1,12 @@
-﻿import { createServerFn } from '@tanstack/react-start'
+import { createServerFn } from '@tanstack/react-start'
 import { db } from '@/db'
 import { products, inventory } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { getAuthenticatedUserWithActiveStore } from './auth'
 
 export const getInventoryFn = createServerFn({ method: 'GET' })
   .handler(async () => {
-    // Left join products with inventory to get the full list
-    // In a real app we would filter by workspaceId from session
+    const { activeStoreId } = await getAuthenticatedUserWithActiveStore()
     const results = await db
       .select({
         id: products.id,
@@ -22,7 +22,11 @@ export const getInventoryFn = createServerFn({ method: 'GET' })
         quantity: inventory.quantity,
       })
       .from(products)
-      .leftJoin(inventory, eq(products.id, inventory.productId))
+      .where(eq(products.workspaceId, activeStoreId))
+      .leftJoin(inventory, and(
+        eq(products.id, inventory.productId),
+        eq(inventory.workspaceId, activeStoreId)
+      ))
     
     return results.map(row => ({
       ...row,
@@ -33,8 +37,11 @@ export const getInventoryFn = createServerFn({ method: 'GET' })
 import { productSchema } from '@/utils/validations'
 
 export const createProductFn = createServerFn({ method: 'POST' })
-  .validator((data: import('zod').infer<typeof productSchema> & { workspaceId: number }) => data)
+  .validator((data: import('zod').infer<typeof productSchema> & { workspaceId?: number }) => data)
   .handler(async ({ data }) => {
+    const { activeStoreId } = await getAuthenticatedUserWithActiveStore()
+    const targetWorkspaceId = data.workspaceId || activeStoreId
+
     // 1. Insert product
     const [newProduct] = await db.insert(products).values({
       name: data.name,
@@ -42,8 +49,8 @@ export const createProductFn = createServerFn({ method: 'POST' })
       price: data.price.toString(),
       cost: data.cost.toString(),
       unit: data.unit,
-      imageUrl: data.imageUrl || null, // Handle real file upload in a separate step or bucket
-      workspaceId: data.workspaceId,
+      imageUrl: data.imageUrl || null,
+      workspaceId: targetWorkspaceId,
       margin: data.margin?.toString() || null,
       minStock: data.minStock?.toString() || '5',
       notes: data.notes || null,
@@ -51,7 +58,7 @@ export const createProductFn = createServerFn({ method: 'POST' })
     
     // 2. Initialize inventory for product
     await db.insert(inventory).values({
-      workspaceId: data.workspaceId,
+      workspaceId: targetWorkspaceId,
       productId: newProduct.id,
       quantity: '0'
     })
