@@ -4,6 +4,7 @@ import {
 	HeadContent,
 	redirect,
 	Scripts,
+	useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import {
@@ -20,9 +21,11 @@ import {
 import {
 	Sidebar,
 	SidebarContent,
+	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -73,45 +76,78 @@ const menuItems = [
 ];
 
 function AppSidebar() {
+	const location = useLocation();
+
 	return (
-		<Sidebar>
+		<Sidebar collapsible="icon">
+			<SidebarHeader className="h-14 border-b border-sidebar-border flex flex-row items-center justify-between px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
+				<div className="flex items-center gap-2 overflow-hidden px-1">
+					<div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-xs">
+						M
+					</div>
+					<div className="flex flex-col truncate group-data-[collapsible=icon]:hidden">
+						<span className="font-bold text-sm leading-tight text-sidebar-foreground">Malba</span>
+						<span className="text-[10px] text-muted-foreground leading-tight">Punto de Venta</span>
+					</div>
+				</div>
+			</SidebarHeader>
+
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel>Punto de Venta</SidebarGroupLabel>
+					<SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+						Punto de Venta
+					</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<SidebarMenu>
-							{menuItems.map((item) => (
-								<SidebarMenuItem key={item.title}>
-									<SidebarMenuButton tooltip={item.title}>
-										<a href={item.url} className="flex items-center gap-2">
-											<item.icon />
-											<span>{item.title}</span>
-										</a>
-									</SidebarMenuButton>
-								</SidebarMenuItem>
-							))}
+							{menuItems.map((item) => {
+								const isActive =
+									location.pathname === item.url ||
+									(item.url !== "/" && location.pathname.startsWith(item.url));
+
+								return (
+									<SidebarMenuItem key={item.title}>
+										<SidebarMenuButton
+											tooltip={item.title}
+											isActive={isActive}
+											render={<a href={item.url} />}
+										>
+											<item.icon className="size-4 shrink-0" />
+											<span className="truncate group-data-[collapsible=icon]:hidden">
+												{item.title}
+											</span>
+										</SidebarMenuButton>
+									</SidebarMenuItem>
+								);
+							})}
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
-			<div className="p-4 mt-auto border-t border-sidebar-border">
-				<button
-					onClick={() => (window.location.href = "/login")}
-					className="flex items-center gap-2 w-full px-2 py-2 text-sm font-medium text-destructive rounded-md hover:bg-destructive/10 transition-colors"
-				>
-					<LogOut size={18} />
-					Cerrar Sesión
-				</button>
-			</div>
+
+			<SidebarFooter className="border-t border-sidebar-border p-2">
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton
+							tooltip="Cerrar Sesión"
+							onClick={() => (window.location.href = "/login")}
+							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+						>
+							<LogOut className="size-4 shrink-0" />
+							<span className="truncate group-data-[collapsible=icon]:hidden">
+								Cerrar Sesión
+							</span>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarFooter>
 		</Sidebar>
 	);
 }
 
-import { useLocation } from "@tanstack/react-router";
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
 import ThemeToggle from "@/components/ThemeToggle";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	const location = useLocation();

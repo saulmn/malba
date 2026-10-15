@@ -48,7 +48,7 @@ export function LoginScreen() {
 
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-background p-4">
-			<Card className="w-full max-w-md shadow-lg border-t-4 border-t-primary">
+			<Card className="w-full max-w-md shadow-lg">
 				<CardHeader className="space-y-1">
 					<CardTitle className="text-2xl font-bold text-center">
 						Bienvenido al Punto de Venta
@@ -75,7 +75,7 @@ export function LoginScreen() {
 								required
 							/>
 						</div>
-						<div className="space-y-2">
+						<div className="space-y-2 pb-6">
 							<Label htmlFor="password">Contraseña</Label>
 							<Input
 								id="password"
