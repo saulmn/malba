@@ -146,3 +146,180 @@ export const updateProductFn = createServerFn({ method: 'POST' })
     return updated
   })
 
+export const importProductsBatchFn = createServerFn({ method: 'POST' })
+  .validator((data: {
+    products: Array<{
+      name: string;
+      category?: string | null;
+      supplierName?: string | null;
+      cost: number;
+      price: number;
+      margin?: number | null;
+      quantity: number;
+      unit?: 'piece' | 'liter' | 'kilo' | 'package';
+      minStock?: number | null;
+      notes?: string | null;
+    }>;
+    duplicateAction?: 'update' | 'skip' | 'create_always';
+  }) => data)
+  .handler(async ({ data }) => {
+    const { activeStoreId } = await getAuthenticatedUserWithActiveStore()
+    const { products: items, duplicateAction = 'update' } = data
+
+    // 1. Process distinct suppliers
+    const distinctSupplierNames = Array.from(
+      new Set(
+        items
+          .map(i => i.supplierName?.trim())
+          .filter((name): name is string => !!name && name.length > 0)
+      )
+    )
+
+    const existingSuppliers = await db.query.suppliers.findMany({
+      where: eq(suppliers.workspaceId, activeStoreId)
+    })
+
+    const supplierMap = new Map<string, number>()
+    for (const s of existingSuppliers) {
+      supplierMap.set(s.name.trim().toLowerCase(), s.id)
+    }
+
+    let suppliersCreated = 0
+    for (const sName of distinctSupplierNames) {
+      const lower = sName.toLowerCase()
+      if (!supplierMap.has(lower)) {
+        const [newSupplier] = await db.insert(suppliers).values({
+          workspaceId: activeStoreId,
+          name: sName,
+        }).returning()
+        supplierMap.set(lower, newSupplier.id)
+        suppliersCreated++
+      }
+    }
+
+    // 2. Process distinct categories
+    const distinctCategoryNames = Array.from(
+      new Set(
+        items
+          .map(i => i.category?.trim())
+          .filter((name): name is string => !!name && name.length > 0)
+      )
+    )
+
+    const existingCategories = await db.query.categories.findMany({
+      where: eq(categories.workspaceId, activeStoreId)
+    })
+    const categorySet = new Set(existingCategories.map(c => c.name.trim().toLowerCase()))
+
+    let categoriesCreated = 0
+    for (const cName of distinctCategoryNames) {
+      const lower = cName.toLowerCase()
+      if (!categorySet.has(lower)) {
+        await db.insert(categories).values({
+          workspaceId: activeStoreId,
+          name: cName,
+        })
+        categorySet.add(lower)
+        categoriesCreated++
+      }
+    }
+
+    // 3. Process products and inventory
+    const existingProducts = await db.query.products.findMany({
+      where: eq(products.workspaceId, activeStoreId)
+    })
+    const productMapByName = new Map<string, typeof existingProducts[0]>()
+    for (const p of existingProducts) {
+      productMapByName.set(p.name.trim().toLowerCase(), p)
+    }
+
+    let createdCount = 0
+    let updatedCount = 0
+    let skippedCount = 0
+
+    for (const item of items) {
+      const cleanName = item.name.trim()
+      const lowerName = cleanName.toLowerCase()
+      const supplierId = item.supplierName?.trim()
+        ? supplierMap.get(item.supplierName.trim().toLowerCase()) || null
+        : null
+
+      const existingProd = productMapByName.get(lowerName)
+
+      if (existingProd && duplicateAction === 'skip') {
+        skippedCount++
+        continue
+      }
+
+      if (existingProd && duplicateAction === 'update') {
+        // Update product record
+        await db.update(products).set({
+          category: item.category?.trim() || existingProd.category,
+          price: item.price.toString(),
+          cost: item.cost.toString(),
+          margin: item.margin !== undefined && item.margin !== null ? item.margin.toString() : existingProd.margin,
+          unit: item.unit || existingProd.unit,
+          supplierId: supplierId || existingProd.supplierId,
+          minStock: item.minStock?.toString() || existingProd.minStock || '1',
+          notes: item.notes || existingProd.notes,
+        }).where(eq(products.id, existingProd.id))
+
+        // Update inventory record
+        const existingInv = await db.query.inventory.findFirst({
+          where: and(
+            eq(inventory.productId, existingProd.id),
+            eq(inventory.workspaceId, activeStoreId)
+          )
+        })
+
+        if (existingInv) {
+          await db.update(inventory)
+            .set({ quantity: (item.quantity !== undefined ? item.quantity : 0).toString() })
+            .where(eq(inventory.id, existingInv.id))
+        } else {
+          await db.insert(inventory).values({
+            workspaceId: activeStoreId,
+            productId: existingProd.id,
+            quantity: (item.quantity !== undefined ? item.quantity : 0).toString()
+          })
+        }
+
+        updatedCount++
+      } else {
+        // Create new product
+        const [newProd] = await db.insert(products).values({
+          workspaceId: activeStoreId,
+          name: cleanName,
+          category: item.category?.trim() || null,
+          price: item.price.toString(),
+          cost: item.cost.toString(),
+          margin: item.margin !== undefined && item.margin !== null ? item.margin.toString() : null,
+          unit: item.unit || 'piece',
+          supplierId: supplierId,
+          minStock: item.minStock?.toString() || '1',
+          notes: item.notes || null,
+        }).returning()
+
+        await db.insert(inventory).values({
+          workspaceId: activeStoreId,
+          productId: newProd.id,
+          quantity: (item.quantity !== undefined ? item.quantity : 0).toString(),
+        })
+
+        productMapByName.set(lowerName, newProd)
+        createdCount++
+      }
+    }
+
+    return {
+      success: true,
+      total: items.length,
+      created: createdCount,
+      updated: updatedCount,
+      skipped: skippedCount,
+      categoriesCreated,
+      suppliersCreated,
+    }
+  })
+
+

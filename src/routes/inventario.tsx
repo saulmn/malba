@@ -11,6 +11,7 @@ import {
 	Filter,
 	X,
 	Package,
+	Upload,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { ProductForm } from "@/features/inventory/product-form";
+import { CSVImportDialog } from "@/features/inventory/csv-import-dialog";
 import {
 	createProductFn,
 	getInventoryFn,
@@ -61,6 +63,7 @@ function RouteComponent() {
 	const router = useRouter();
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [isImportOpen, setIsImportOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
 
 	// Filters
@@ -251,19 +254,41 @@ function RouteComponent() {
 					</p>
 				</div>
 
-				<ResponsiveDialog
-					open={isDialogOpen}
-					onOpenChange={(open) => {
-						setIsDialogOpen(open);
-						if (!open) setEditingItem(null);
-					}}
-					title={editingItem ? "Editar Producto" : "Agregar Nuevo Producto"}
-					trigger={
-						<Button className="flex items-center gap-2">
-							<Plus size={16} /> Nuevo Producto
-						</Button>
-					}
-				>
+				<div className="flex items-center gap-2">
+					<ResponsiveDialog
+						open={isImportOpen}
+						onOpenChange={setIsImportOpen}
+						title="Importar Productos desde CSV"
+						trigger={
+							<Button variant="outline" className="flex items-center gap-2">
+								<Upload size={16} /> Importar CSV
+							</Button>
+						}
+					>
+						<CSVImportDialog
+							categories={categories}
+							suppliers={suppliers}
+							onSuccess={() => {
+								setIsImportOpen(false);
+								router.invalidate();
+							}}
+							onCancel={() => setIsImportOpen(false)}
+						/>
+					</ResponsiveDialog>
+
+					<ResponsiveDialog
+						open={isDialogOpen}
+						onOpenChange={(open) => {
+							setIsDialogOpen(open);
+							if (!open) setEditingItem(null);
+						}}
+						title={editingItem ? "Editar Producto" : "Agregar Nuevo Producto"}
+						trigger={
+							<Button className="flex items-center gap-2">
+								<Plus size={16} /> Nuevo Producto
+							</Button>
+						}
+					>
 					<ProductForm
 						suppliers={suppliers}
 						categories={categories}
@@ -292,6 +317,7 @@ function RouteComponent() {
 						}
 					/>
 				</ResponsiveDialog>
+				</div>
 			</div>
 
 			<Card>
