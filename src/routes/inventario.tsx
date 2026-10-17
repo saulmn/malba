@@ -39,7 +39,7 @@ import {
 import { getSuppliersFn } from "@/server/suppliers";
 import { getCategoriesFn } from "@/server/categories";
 import { type ProductFormValues } from "@/utils/validations";
-import { formatCurrency, formatQuantity } from "@/utils/format";
+import { formatCurrency } from "@/utils/format";
 
 export const Route = createFileRoute("/inventario")({
 	component: RouteComponent,
@@ -595,7 +595,7 @@ function RouteComponent() {
 																			: "text-foreground"
 																}
 															>
-																{formatQuantity(qty)}
+																{qty}
 															</span>
 															<span className="text-xs font-normal text-muted-foreground">
 																{item.unit === "piece"
