@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
 	Table,
 	TableBody,
@@ -51,6 +52,7 @@ function RouteComponent() {
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingSupplier, setEditingSupplier] = useState<any | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 	const [search, setSearch] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
@@ -78,15 +80,11 @@ function RouteComponent() {
 		}
 	};
 
-	const handleDelete = async (id: number, name: string) => {
-		if (
-			!confirm(
-				`¿Estás seguro de eliminar al proveedor "${name}"? Los productos o gastos asociados mantendrán su historial.`,
-			)
-		) {
-			return;
-		}
+	const handleDelete = (id: number, name: string) => {
+		setDeleteTarget({ id, name });
+	};
 
+	const executeDelete = async (id: number) => {
 		try {
 			await deleteSupplierFn({ data: { id } });
 			toast.success("Proveedor eliminado");
@@ -385,6 +383,21 @@ function RouteComponent() {
 					}}
 				/>
 			</div>
+
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onOpenChange={(open) => !open && setDeleteTarget(null)}
+				title="Eliminar Proveedor"
+				description={`¿Estás seguro de eliminar al proveedor "${deleteTarget?.name}"? Los productos o gastos asociados mantendrán su historial.`}
+				confirmText="Eliminar"
+				variant="destructive"
+				icon="trash"
+				onConfirm={async () => {
+					if (deleteTarget) {
+						await executeDelete(deleteTarget.id);
+					}
+				}}
+			/>
 		</div>
 	);
 }

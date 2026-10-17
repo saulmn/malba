@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
 	Table,
 	TableBody,
@@ -59,6 +60,7 @@ function RouteComponent() {
 	const router = useRouter();
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
 	const [search, setSearch] = useState("");
 	const [selectedPeriod, setSelectedPeriod] = useState<
 		"all" | "week" | "month" | "year"
@@ -78,15 +80,11 @@ function RouteComponent() {
 		}
 	};
 
-	const handleDelete = async (id: number, title: string) => {
-		if (
-			!confirm(
-				`¿Estás seguro de eliminar el gasto "${title}"? Esta acción no se puede deshacer.`,
-			)
-		) {
-			return;
-		}
+	const handleDelete = (id: number, title: string) => {
+		setDeleteTarget({ id, title });
+	};
 
+	const executeDelete = async (id: number) => {
 		try {
 			await deleteExpenseFn({ data: { id } });
 			toast.success("Gasto eliminado");
@@ -423,6 +421,21 @@ function RouteComponent() {
 					}}
 				/>
 			</div>
+
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onOpenChange={(open) => !open && setDeleteTarget(null)}
+				title="Eliminar Gasto"
+				description={`¿Estás seguro de eliminar el gasto "${deleteTarget?.title}"? Esta acción no se puede deshacer.`}
+				confirmText="Eliminar"
+				variant="destructive"
+				icon="trash"
+				onConfirm={async () => {
+					if (deleteTarget) {
+						await executeDelete(deleteTarget.id);
+					}
+				}}
+			/>
 		</div>
 	);
 }

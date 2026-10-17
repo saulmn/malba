@@ -27,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { ProductForm } from "@/features/inventory/product-form";
 import { CSVImportDialog } from "@/features/inventory/csv-import-dialog";
@@ -67,6 +68,11 @@ function RouteComponent() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isImportOpen, setIsImportOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
+	const [deleteProductTarget, setDeleteProductTarget] = useState<{
+		id: number;
+		name: string;
+		reopenEditOnCancel?: boolean;
+	} | null>(null);
 
 	// Filters
 	const [search, setSearch] = useState("");
@@ -156,15 +162,15 @@ function RouteComponent() {
 		}
 	};
 
-	const handleDeleteProduct = async (id: number, name: string) => {
-		if (
-			!confirm(
-				`¿Estás seguro de eliminar el producto "${name}" del inventario? Esta acción no se puede deshacer.`,
-			)
-		) {
-			return;
-		}
+	const handleDeleteProduct = (
+		id: number,
+		name: string,
+		reopenEditOnCancel = false,
+	) => {
+		setDeleteProductTarget({ id, name, reopenEditOnCancel });
+	};
 
+	const executeDeleteProduct = async (id: number) => {
 		try {
 			await deleteProductFn({ data: { id } });
 			toast.success("Producto eliminado exitosamente");
@@ -320,7 +326,11 @@ function RouteComponent() {
 						onSubmit={handleSubmitProduct}
 						onDelete={
 							editingItem
-								? () => handleDeleteProduct(editingItem.id, editingItem.name)
+								? () => {
+										const item = editingItem;
+										setIsDialogOpen(false);
+										handleDeleteProduct(item.id, item.name, true);
+									}
 								: undefined
 						}
 						onCancel={() => {
@@ -678,6 +688,28 @@ function RouteComponent() {
 					</div>
 				</CardContent>
 			</Card>
+
+			<ConfirmDialog
+				open={!!deleteProductTarget}
+				onOpenChange={(open) => {
+					if (!open) {
+						if (deleteProductTarget?.reopenEditOnCancel) {
+							setIsDialogOpen(true);
+						}
+						setDeleteProductTarget(null);
+					}
+				}}
+				title="Eliminar Producto"
+				description={`¿Estás seguro de eliminar el producto "${deleteProductTarget?.name}" del inventario? Esta acción no se puede deshacer.`}
+				confirmText="Eliminar"
+				variant="destructive"
+				icon="trash"
+				onConfirm={async () => {
+					if (deleteProductTarget) {
+						await executeDeleteProduct(deleteProductTarget.id);
+					}
+				}}
+			/>
 		</div>
 	);
 }

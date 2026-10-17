@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle } from 'lucide-react'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { formatCurrency, formatQuantity } from '@/utils/format'
 import { Trash2, Search } from 'lucide-react'
 import { CheckoutForm, type CheckoutFormValues } from '@/features/pos/checkout-form'
@@ -38,6 +39,7 @@ export function PosScreen() {
       return []
     }
   })
+  const [isClearTicketOpen, setIsClearTicketOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && storageKey) {
@@ -223,12 +225,7 @@ export function PosScreen() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
-                  onClick={() => {
-                    if (confirm("¿Estás seguro de vaciar el ticket actual?")) {
-                      setOrder([])
-                      if (storageKey) localStorage.removeItem(storageKey)
-                    }
-                  }}
+                  onClick={() => setIsClearTicketOpen(true)}
                   title="Vaciar ticket actual"
                 >
                   Vaciar
@@ -320,6 +317,20 @@ export function PosScreen() {
           </ResponsiveDialog>
         </div>
       </Card>
+
+      <ConfirmDialog
+        open={isClearTicketOpen}
+        onOpenChange={setIsClearTicketOpen}
+        title="Vaciar Ticket"
+        description="¿Estás seguro de vaciar todos los artículos del ticket actual? Esta acción no se puede deshacer."
+        confirmText="Vaciar Ticket"
+        variant="destructive"
+        icon="trash"
+        onConfirm={() => {
+          setOrder([])
+          if (storageKey) localStorage.removeItem(storageKey)
+        }}
+      />
     </div>
   )
 }

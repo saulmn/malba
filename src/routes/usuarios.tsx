@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Plus, Edit2, Trash2, Store, Users, ShieldAlert, Search } from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { UserForm } from "@/features/users/user-form";
 import {
@@ -34,6 +35,7 @@ function RouteComponent() {
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingUser, setEditingUser] = useState<any | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 	const [search, setSearch] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
@@ -61,11 +63,11 @@ function RouteComponent() {
 		}
 	};
 
-	const handleDeleteUser = async (id: number, name: string) => {
-		if (!confirm(`¿Estás seguro de eliminar al usuario "${name}"? Esta acción cancelará sus accesos al sistema.`)) {
-			return;
-		}
+	const handleDeleteUser = (id: number, name: string) => {
+		setDeleteTarget({ id, name });
+	};
 
+	const executeDeleteUser = async (id: number) => {
 		try {
 			await deleteUserFn({ data: { id } });
 			toast.success("Usuario eliminado exitosamente");
@@ -291,6 +293,21 @@ function RouteComponent() {
 					/>
 				</CardContent>
 			</Card>
+
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onOpenChange={(open) => !open && setDeleteTarget(null)}
+				title="Eliminar Usuario"
+				description={`¿Estás seguro de eliminar al usuario "${deleteTarget?.name}"? Esta acción cancelará sus accesos al sistema.`}
+				confirmText="Eliminar"
+				variant="destructive"
+				icon="trash"
+				onConfirm={async () => {
+					if (deleteTarget) {
+						await executeDeleteUser(deleteTarget.id);
+					}
+				}}
+			/>
 		</div>
 	);
 }
