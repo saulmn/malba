@@ -12,6 +12,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface ExpenseFormProps {
 	suppliers: Array<{ id: number; name: string }>;
@@ -131,26 +132,19 @@ export function ExpenseForm({
 						control={control}
 						name="supplierId"
 						render={({ field }) => (
-							<Select
-								value={field.value ? String(field.value) : "none"}
-								onValueChange={(val) =>
-									field.onChange(val === "none" ? null : Number(val))
-								}
-							>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Sin proveedor (Gasto general)" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="none">
-										Sin proveedor (Gasto general)
-									</SelectItem>
-									{suppliers.map((s) => (
-										<SelectItem key={s.id} value={String(s.id)}>
-											{s.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							<SearchableSelect
+								value={field.value ? String(field.value) : ""}
+								onChange={(val) => field.onChange(val ? Number(val) : null)}
+								options={[
+									{ value: "", label: "Sin proveedor (Gasto general)" },
+									...suppliers.map((s) => ({
+										value: String(s.id),
+										label: s.name,
+									})),
+								]}
+								placeholder="Sin proveedor (Gasto general)"
+								searchPlaceholder="Buscar proveedor..."
+							/>
 						)}
 					/>
 				</div>

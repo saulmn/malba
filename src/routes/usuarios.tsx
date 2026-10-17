@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Store, Users, ShieldAlert } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Edit2, Trash2, Store, Users, ShieldAlert, Search } from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { UserForm } from "@/features/users/user-form";
 import {
 	createUserFn,
@@ -32,6 +34,9 @@ function RouteComponent() {
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingUser, setEditingUser] = useState<any | null>(null);
+	const [search, setSearch] = useState("");
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
 
 	const handleCreateOrUpdateUser = async (formData: any) => {
 		try {
@@ -70,6 +75,23 @@ function RouteComponent() {
 			toast.error(error.message || "Error al eliminar usuario");
 		}
 	};
+
+	const filteredUsers = data.filter((u) => {
+		const q = search.toLowerCase();
+		return (
+			u.name.toLowerCase().includes(q) ||
+			(u.username && u.username.toLowerCase().includes(q)) ||
+			(u.email && u.email.toLowerCase().includes(q)) ||
+			(u.activeWorkspaceName && u.activeWorkspaceName.toLowerCase().includes(q))
+		);
+	});
+
+	const totalItems = filteredUsers.length;
+	const totalPages = Math.ceil(totalItems / pageSize) || 1;
+	const paginatedUsers = filteredUsers.slice(
+		(currentPage - 1) * pageSize,
+		currentPage * pageSize,
+	);
 
 	const getRoleBadge = (role: string) => {
 		switch (role) {
@@ -135,11 +157,24 @@ function RouteComponent() {
 			</div>
 
 			<Card>
-				<CardHeader className="flex flex-row items-center justify-between">
+				<CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 					<CardTitle className="text-base font-semibold flex items-center gap-2">
 						<Users className="size-4 text-primary" />
 						Usuarios del Sistema ({data.length})
 					</CardTitle>
+					<div className="relative w-full sm:w-64">
+						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+						<Input
+							type="search"
+							placeholder="Buscar usuario..."
+							className="pl-8 bg-card"
+							value={search}
+							onChange={(e) => {
+								setSearch(e.target.value);
+								setCurrentPage(1);
+							}}
+						/>
+					</div>
 				</CardHeader>
 				<CardContent>
 					<div className="border rounded-md overflow-x-auto">
@@ -155,17 +190,19 @@ function RouteComponent() {
 								</tr>
 							</thead>
 							<tbody className="divide-y">
-								{data.length === 0 ? (
+								{paginatedUsers.length === 0 ? (
 									<tr>
 										<td
 											colSpan={6}
 											className="px-4 py-8 text-center text-muted-foreground"
 										>
-											No hay usuarios registrados.
+											{data.length === 0
+												? "No hay usuarios registrados."
+												: "No se encontraron usuarios que coincidan con la búsqueda."}
 										</td>
 									</tr>
 								) : (
-									data.map((user) => (
+									paginatedUsers.map((user) => (
 										<tr key={user.id} className="hover:bg-muted/40 transition-colors">
 											<td className="px-4 py-3 font-medium">
 												<div className="flex flex-col">
@@ -240,6 +277,18 @@ function RouteComponent() {
 							</tbody>
 						</table>
 					</div>
+
+					<DataTablePagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						pageSize={pageSize}
+						totalItems={totalItems}
+						onPageChange={setCurrentPage}
+						onPageSizeChange={(newSize) => {
+							setPageSize(newSize);
+							setCurrentPage(1);
+						}}
+					/>
 				</CardContent>
 			</Card>
 		</div>

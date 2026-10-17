@@ -115,7 +115,16 @@ export const customers = pgTable("customers", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// 5. Catálogo de Productos e Inventarios
+// 5. Catálogo de Productos, Categorías e Inventarios
+export const categories = pgTable("categories", {
+	id: serial("id").primaryKey(),
+	workspaceId: integer("workspace_id")
+		.references(() => workspaces.id)
+		.notNull(),
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const products = pgTable("products", {
 	id: serial("id").primaryKey(),
 	workspaceId: integer("workspace_id")
@@ -132,7 +141,7 @@ export const products = pgTable("products", {
 	notes: varchar("notes", { length: 3000 }),
 	minStock: numeric("min_stock", { precision: 10, scale: 3 })
 		.notNull()
-		.default("5"),
+		.default("1"),
 	unit: unitEnum("unit").notNull().default("piece"),
 	imageUrl: text("image_url"),
 	isQuickAction: boolean("is_quick_action").default(false).notNull(),
@@ -244,6 +253,14 @@ export const workspacesRelations = relations(workspaces, ({ many }) => ({
 	suppliers: many(suppliers),
 	customers: many(customers),
 	expenses: many(expenses),
+	categories: many(categories),
+}));
+
+export const categoriesRelations = relations(categories, ({ one }) => ({
+	workspace: one(workspaces, {
+		fields: [categories.workspaceId],
+		references: [workspaces.id],
+	}),
 }));
 
 export const workspaceUsersRelations = relations(workspaceUsers, ({ one }) => ({

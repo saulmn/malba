@@ -6,6 +6,7 @@ export const productSchema = z.object({
 	price: z.coerce.number().min(0, "El precio no puede ser negativo"),
 	cost: z.coerce.number().min(0, "El costo no puede ser negativo"),
 	margin: z.coerce.number().min(0).optional(),
+	quantity: z.coerce.number().min(0, "La existencia no puede ser negativa").default(0),
 	notes: z
 		.string()
 		.max(3000, "Las notas no pueden superar 3000 caracteres")
@@ -13,7 +14,7 @@ export const productSchema = z.object({
 	minStock: z.coerce
 		.number()
 		.min(0, "El stock mínimo no puede ser negativo")
-		.default(5),
+		.default(1),
 	unit: z.enum(["piece", "liter", "kilo", "package"]),
 	supplierId: z.coerce.number().optional().nullable(),
 	image: z.any().optional(),
@@ -21,6 +22,12 @@ export const productSchema = z.object({
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
+
+export const categorySchema = z.object({
+	name: z.string().min(2, "El nombre de la categoría debe tener al menos 2 caracteres"),
+});
+
+export type CategoryFormValues = z.infer<typeof categorySchema>;
 
 export const workspaceSchema = z.object({
 	name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),

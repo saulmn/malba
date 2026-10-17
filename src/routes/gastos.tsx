@@ -26,6 +26,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { ExpenseForm } from "@/features/expenses/expense-form";
 import {
 	getExpensesFn,
@@ -62,6 +63,8 @@ function RouteComponent() {
 	const [selectedPeriod, setSelectedPeriod] = useState<
 		"all" | "week" | "month" | "year"
 	>("all");
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
 
 	const handleCreateExpense = async (formData: ExpenseFormValues) => {
 		try {
@@ -116,6 +119,13 @@ function RouteComponent() {
 			(e.supplierName && e.supplierName.toLowerCase().includes(q))
 		);
 	});
+
+	const totalItems = filteredExpenses.length;
+	const totalPages = Math.ceil(totalItems / pageSize) || 1;
+	const paginatedExpenses = filteredExpenses.slice(
+		(currentPage - 1) * pageSize,
+		currentPage * pageSize,
+	);
 
 	const totalAmount = filteredExpenses.reduce(
 		(sum, e) => sum + Number(e.amount || 0),
@@ -254,7 +264,10 @@ function RouteComponent() {
 						variant={selectedPeriod === "all" ? "default" : "ghost"}
 						size="sm"
 						className="h-7 text-xs"
-						onClick={() => setSelectedPeriod("all")}
+						onClick={() => {
+							setSelectedPeriod("all");
+							setCurrentPage(1);
+						}}
 					>
 						Todos
 					</Button>
@@ -262,7 +275,10 @@ function RouteComponent() {
 						variant={selectedPeriod === "week" ? "default" : "ghost"}
 						size="sm"
 						className="h-7 text-xs"
-						onClick={() => setSelectedPeriod("week")}
+						onClick={() => {
+							setSelectedPeriod("week");
+							setCurrentPage(1);
+						}}
 					>
 						Esta Semana
 					</Button>
@@ -270,7 +286,10 @@ function RouteComponent() {
 						variant={selectedPeriod === "month" ? "default" : "ghost"}
 						size="sm"
 						className="h-7 text-xs"
-						onClick={() => setSelectedPeriod("month")}
+						onClick={() => {
+							setSelectedPeriod("month");
+							setCurrentPage(1);
+						}}
 					>
 						Este Mes
 					</Button>
@@ -278,7 +297,10 @@ function RouteComponent() {
 						variant={selectedPeriod === "year" ? "default" : "ghost"}
 						size="sm"
 						className="h-7 text-xs"
-						onClick={() => setSelectedPeriod("year")}
+						onClick={() => {
+							setSelectedPeriod("year");
+							setCurrentPage(1);
+						}}
 					>
 						Este Año
 					</Button>
@@ -291,7 +313,10 @@ function RouteComponent() {
 						placeholder="Buscar por concepto o proveedor..."
 						className="pl-8 bg-card"
 						value={search}
-						onChange={(e) => setSearch(e.target.value)}
+						onChange={(e) => {
+							setSearch(e.target.value);
+							setCurrentPage(1);
+						}}
 					/>
 				</div>
 			</div>
@@ -311,7 +336,7 @@ function RouteComponent() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{filteredExpenses.length === 0 ? (
+						{paginatedExpenses.length === 0 ? (
 							<TableRow>
 								<TableCell
 									colSpan={7}
@@ -323,7 +348,7 @@ function RouteComponent() {
 								</TableCell>
 							</TableRow>
 						) : (
-							filteredExpenses.map((expense) => (
+							paginatedExpenses.map((expense) => (
 								<TableRow key={expense.id} className="hover:bg-muted/40">
 									<TableCell className="text-xs text-muted-foreground whitespace-nowrap">
 										<div className="flex items-center gap-1.5">
@@ -385,6 +410,18 @@ function RouteComponent() {
 						)}
 					</TableBody>
 				</Table>
+
+				<DataTablePagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					pageSize={pageSize}
+					totalItems={totalItems}
+					onPageChange={setCurrentPage}
+					onPageSizeChange={(newSize) => {
+						setPageSize(newSize);
+						setCurrentPage(1);
+					}}
+				/>
 			</div>
 		</div>
 	);

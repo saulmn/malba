@@ -1,5 +1,7 @@
-﻿import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DataTablePagination } from '@/components/ui/data-table-pagination'
 import { formatCurrency } from '@/utils/format'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -17,14 +19,23 @@ export function MySalesScreen({
   currentPeriod: Period 
 }) {
   const navigate = useNavigate({ from: '/mis-ventas' })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const handlePeriodChange = (val: Period) => {
+    setCurrentPage(1)
     navigate({
       search: { period: val }
     })
   }
 
   const totalSales = sales.reduce((acc, sale) => acc + Number(sale.total), 0)
+  const totalItems = sales.length
+  const totalPages = Math.ceil(totalItems / pageSize) || 1
+  const paginatedSales = sales.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   return (
     <div className="flex flex-col gap-6">
@@ -74,35 +85,49 @@ export function MySalesScreen({
         <CardHeader>
           <CardTitle>Historial de Transacciones</CardTitle>
           <CardDescription>
-            Mostrando {sales.length} registros
+            Mostrando {totalItems} registros
           </CardDescription>
         </CardHeader>
         <CardContent>
           {sales.length === 0 ? (
             <div className="py-10 text-center text-muted-foreground">No hay ventas en este periodo</div>
           ) : (
-            <div className="rounded-md border">
-              <div className="grid grid-cols-3 md:grid-cols-4 p-4 border-b font-medium text-muted-foreground bg-muted/50">
-                <div className="col-span-2 md:col-span-2">Fecha y Hora</div>
-                <div className="hidden md:block">Concepto</div>
-                <div className="text-right">Monto</div>
+            <div className="space-y-4">
+              <div className="rounded-md border overflow-hidden">
+                <div className="grid grid-cols-3 md:grid-cols-4 p-4 border-b font-medium text-muted-foreground bg-muted/50">
+                  <div className="col-span-2 md:col-span-2">Fecha y Hora</div>
+                  <div className="hidden md:block">Concepto</div>
+                  <div className="text-right">Monto</div>
+                </div>
+                <div className="divide-y">
+                  {paginatedSales.map((sale) => (
+                    <div key={sale.id} className="grid grid-cols-3 md:grid-cols-4 p-4 items-center">
+                      <div className="col-span-2 md:col-span-2">
+                        <p className="font-medium">{format(new Date(sale.createdAt), "dd 'de' MMMM, yyyy", { locale: es })}</p>
+                        <p className="text-sm text-muted-foreground">{format(new Date(sale.createdAt), "hh:mm a")}</p>
+                      </div>
+                      <div className="hidden md:block text-muted-foreground text-sm">
+                        {sale.description}
+                      </div>
+                      <div className="text-right font-medium text-green-600">
+                        +{formatCurrency(Number(sale.total))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="divide-y max-h-[60vh] overflow-y-auto">
-                {sales.map((sale) => (
-                  <div key={sale.id} className="grid grid-cols-3 md:grid-cols-4 p-4 items-center">
-                    <div className="col-span-2 md:col-span-2">
-                      <p className="font-medium">{format(new Date(sale.createdAt), "dd 'de' MMMM, yyyy", { locale: es })}</p>
-                      <p className="text-sm text-muted-foreground">{format(new Date(sale.createdAt), "hh:mm a")}</p>
-                    </div>
-                    <div className="hidden md:block text-muted-foreground text-sm">
-                      {sale.description}
-                    </div>
-                    <div className="text-right font-medium text-green-600">
-                      +{formatCurrency(Number(sale.total))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+
+              <DataTablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={totalItems}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
           )}
         </CardContent>

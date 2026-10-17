@@ -64,6 +64,13 @@
       "when": 1792104934750,
       "tag": "0008_new_thing",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792127639415,
+      "tag": "0009_melted_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

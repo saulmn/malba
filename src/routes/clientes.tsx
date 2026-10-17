@@ -27,6 +27,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { CustomerForm } from "@/features/customers/customer-form";
 import {
 	getCustomersFn,
@@ -51,6 +52,8 @@ function RouteComponent() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
 	const [search, setSearch] = useState("");
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
 
 	const handleCreateOrUpdate = async (formData: CustomerFormValues) => {
 		try {
@@ -103,6 +106,13 @@ function RouteComponent() {
 			(c.phone1 && c.phone1.includes(q))
 		);
 	});
+
+	const totalItems = filteredCustomers.length;
+	const totalPages = Math.ceil(totalItems / pageSize) || 1;
+	const paginatedCustomers = filteredCustomers.slice(
+		(currentPage - 1) * pageSize,
+		currentPage * pageSize,
+	);
 
 	const totalCustomers = data.length;
 	const totalSpent = data.reduce(
@@ -207,7 +217,10 @@ function RouteComponent() {
 						placeholder="Buscar cliente, teléfono o notas..."
 						className="pl-8 bg-card"
 						value={search}
-						onChange={(e) => setSearch(e.target.value)}
+						onChange={(e) => {
+							setSearch(e.target.value);
+							setCurrentPage(1);
+						}}
 					/>
 				</div>
 			</div>
@@ -226,7 +239,7 @@ function RouteComponent() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{filteredCustomers.length === 0 ? (
+						{paginatedCustomers.length === 0 ? (
 							<TableRow>
 								<TableCell
 									colSpan={6}
@@ -238,7 +251,7 @@ function RouteComponent() {
 								</TableCell>
 							</TableRow>
 						) : (
-							filteredCustomers.map((customer) => (
+							paginatedCustomers.map((customer) => (
 								<TableRow key={customer.id} className="hover:bg-muted/40">
 									<TableCell>
 										<div className="flex flex-col">
@@ -357,6 +370,18 @@ function RouteComponent() {
 						)}
 					</TableBody>
 				</Table>
+
+				<DataTablePagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					pageSize={pageSize}
+					totalItems={totalItems}
+					onPageChange={setCurrentPage}
+					onPageSizeChange={(newSize) => {
+						setPageSize(newSize);
+						setCurrentPage(1);
+					}}
+				/>
 			</div>
 		</div>
 	);
