@@ -304,17 +304,20 @@ export const productsRelations = relations(products, ({ one, many }) => ({
 	transactionItems: many(transactionItems),
 }));
 
-export const transactionsRelations = relations(transactions, ({ one, many }) => ({
-	registerSession: one(registerSessions, {
-		fields: [transactions.registerSessionId],
-		references: [registerSessions.id],
+export const transactionsRelations = relations(
+	transactions,
+	({ one, many }) => ({
+		registerSession: one(registerSessions, {
+			fields: [transactions.registerSessionId],
+			references: [registerSessions.id],
+		}),
+		customer: one(customers, {
+			fields: [transactions.customerId],
+			references: [customers.id],
+		}),
+		items: many(transactionItems),
 	}),
-	customer: one(customers, {
-		fields: [transactions.customerId],
-		references: [customers.id],
-	}),
-	items: many(transactionItems),
-}));
+);
 
 export const expensesRelations = relations(expenses, ({ one }) => ({
 	workspace: one(workspaces, {
@@ -334,3 +337,32 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
 		references: [users.id],
 	}),
 }));
+
+export const registerSessionsRelations = relations(
+	registerSessions,
+	({ one, many }) => ({
+		workspace: one(workspaces, {
+			fields: [registerSessions.workspaceId],
+			references: [workspaces.id],
+		}),
+		user: one(users, {
+			fields: [registerSessions.userId],
+			references: [users.id],
+		}),
+		transactions: many(transactions),
+	}),
+);
+
+export const transactionItemsRelations = relations(
+	transactionItems,
+	({ one }) => ({
+		transaction: one(transactions, {
+			fields: [transactionItems.transactionId],
+			references: [transactions.id],
+		}),
+		product: one(products, {
+			fields: [transactionItems.productId],
+			references: [products.id],
+		}),
+	}),
+);

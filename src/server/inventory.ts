@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { db } from '@/db'
-import { products, inventory, suppliers, categories } from '@/db/schema'
+import { products, inventory, suppliers, categories, transactionItems, inventoryMovements } from '@/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { getAuthenticatedUserWithActiveStore } from './auth'
 import { productSchema } from '@/utils/validations'
@@ -145,6 +145,46 @@ export const updateProductFn = createServerFn({ method: 'POST' })
 
     return updated
   })
+
+export const deleteProductFn = createServerFn({ method: 'POST' })
+  .validator((data: { id: number }) => data)
+  .handler(async ({ data }) => {
+    const { activeStoreId } = await getAuthenticatedUserWithActiveStore()
+
+    const prod = await db.query.products.findFirst({
+      where: and(
+        eq(products.id, data.id),
+        eq(products.workspaceId, activeStoreId)
+      )
+    })
+
+    if (!prod) {
+      throw new Error("Producto no encontrado o no pertenece a esta sucursal")
+    }
+
+    // Unlink transaction items safely so sales history is preserved
+    await db.update(transactionItems)
+      .set({ productId: null })
+      .where(eq(transactionItems.productId, data.id))
+
+    // Delete inventory movements associated with this product
+    await db.delete(inventoryMovements)
+      .where(eq(inventoryMovements.productId, data.id))
+
+    // Delete inventory record
+    await db.delete(inventory)
+      .where(eq(inventory.productId, data.id))
+
+    // Delete product record
+    await db.delete(products)
+      .where(and(
+        eq(products.id, data.id),
+        eq(products.workspaceId, activeStoreId)
+      ))
+
+    return { success: true }
+  })
+
 
 export const importProductsBatchFn = createServerFn({ method: 'POST' })
   .validator((data: {

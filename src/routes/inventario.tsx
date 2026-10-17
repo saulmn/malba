@@ -12,6 +12,7 @@ import {
 	X,
 	Package,
 	Upload,
+	Trash2,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ import { ProductForm } from "@/features/inventory/product-form";
 import { CSVImportDialog } from "@/features/inventory/csv-import-dialog";
 import {
 	createProductFn,
+	deleteProductFn,
 	getInventoryFn,
 	updateProductFn,
 } from "@/server/inventory";
@@ -151,6 +153,29 @@ function RouteComponent() {
 		} catch (error) {
 			toast.error("Error al guardar producto");
 			console.error(error);
+		}
+	};
+
+	const handleDeleteProduct = async (id: number, name: string) => {
+		if (
+			!confirm(
+				`¿Estás seguro de eliminar el producto "${name}" del inventario? Esta acción no se puede deshacer.`,
+			)
+		) {
+			return;
+		}
+
+		try {
+			await deleteProductFn({ data: { id } });
+			toast.success("Producto eliminado exitosamente");
+			if (editingItem?.id === id) {
+				setIsDialogOpen(false);
+				setEditingItem(null);
+			}
+			router.invalidate();
+		} catch (error: any) {
+			console.error(error);
+			toast.error(error.message || "Error al eliminar producto");
 		}
 	};
 
@@ -293,6 +318,11 @@ function RouteComponent() {
 						suppliers={suppliers}
 						categories={categories}
 						onSubmit={handleSubmitProduct}
+						onDelete={
+							editingItem
+								? () => handleDeleteProduct(editingItem.id, editingItem.name)
+								: undefined
+						}
 						onCancel={() => {
 							setIsDialogOpen(false);
 							setEditingItem(null);
@@ -501,7 +531,11 @@ function RouteComponent() {
 											return (
 												<tr
 													key={item.id}
-													className="hover:bg-muted/50 transition-colors"
+													className="hover:bg-muted/50 transition-colors cursor-pointer"
+													onClick={() => {
+														setEditingItem(item);
+														setIsDialogOpen(true);
+													}}
 												>
 													<td className="px-4 py-3">
 														<div className="flex flex-col">
@@ -589,19 +623,37 @@ function RouteComponent() {
 															) : null}
 														</div>
 													</td>
-													<td className="px-4 py-3 text-right">
-														<Button
-															variant="ghost"
-															size="sm"
-															className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-															onClick={() => {
-																setEditingItem(item);
-																setIsDialogOpen(true);
-															}}
-														>
-															<Edit2 size={14} />
-															Editar
-														</Button>
+													<td
+														className="px-4 py-3 text-right"
+														onClick={(e) => e.stopPropagation()}
+													>
+														<div className="flex items-center justify-end gap-1">
+															<Button
+																variant="ghost"
+																size="sm"
+																className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	setEditingItem(item);
+																	setIsDialogOpen(true);
+																}}
+															>
+																<Edit2 size={14} />
+																Editar
+															</Button>
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	handleDeleteProduct(item.id, item.name);
+																}}
+																title="Eliminar producto"
+															>
+																<Trash2 size={14} />
+															</Button>
+														</div>
 													</td>
 												</tr>
 											);

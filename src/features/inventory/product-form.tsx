@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Trash2 } from "lucide-react";
 
 interface ProductFormProps {
 	onSubmit: (data: ProductFormValues) => void;
 	onCancel?: () => void;
+	onDelete?: () => void;
 	defaultValues?: Partial<ProductFormValues>;
 	suppliers?: Array<{ id: number; name: string }>;
 	categories?: Array<{ id: number | string; name: string }>;
@@ -19,6 +21,7 @@ interface ProductFormProps {
 export function ProductForm({
 	onSubmit,
 	onCancel,
+	onDelete,
 	defaultValues,
 	suppliers = [],
 	categories = [],
@@ -283,13 +286,27 @@ export function ProductForm({
 				</p>
 			</div>
 
-			<div className="flex justify-end gap-2 pt-2 border-t">
-				{onCancel && (
-					<Button type="button" variant="outline" onClick={onCancel}>
-						Cancelar
+			<div className="flex items-center justify-between gap-2 pt-2 border-t">
+				{onDelete ? (
+					<Button
+						type="button"
+						variant="ghost"
+						className="text-destructive hover:bg-destructive/10 text-xs gap-1.5 h-9"
+						onClick={onDelete}
+					>
+						<Trash2 size={14} /> Eliminar Producto
 					</Button>
+				) : (
+					<div />
 				)}
-				<Button type="submit">Guardar Producto</Button>
+				<div className="flex items-center gap-2">
+					{onCancel && (
+						<Button type="button" variant="outline" onClick={onCancel}>
+							Cancelar
+						</Button>
+					)}
+					<Button type="submit">Guardar Producto</Button>
+				</div>
 			</div>
 		</form>
 	);

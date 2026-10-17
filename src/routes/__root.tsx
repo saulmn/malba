@@ -11,6 +11,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import {
 	BarChart,
 	FileText,
+	History,
 	Home,
 	LogOut,
 	Package,
@@ -71,7 +72,7 @@ export const Route = createRootRoute({
 const menuItems = [
 	{ title: "Inicio", url: "/", icon: Home },
 	{ title: "Ventas", url: "/ventas", icon: ShoppingCart },
-	{ title: "Mis Ventas", url: "/mis-ventas", icon: FileText },
+	{ title: "Historial de Ventas", url: "/mis-ventas", icon: History },
 	{ title: "Inventario", url: "/inventario", icon: Package },
 	{ title: "Proveedores", url: "/proveedores", icon: Truck },
 	{ title: "Clientes", url: "/clientes", icon: UserCheck },

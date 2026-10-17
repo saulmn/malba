@@ -23,10 +23,10 @@ export const getLowStockNotificationsFn = createServerFn({ method: 'GET' })
         .where(
           and(
             eq(products.workspaceId, activeStoreId),
-            sql`CAST(${inventory.quantity} AS DECIMAL) <= CAST(COALESCE(${products.minStock}, '5') AS DECIMAL)`
+            sql`CAST(${inventory.quantity} AS DECIMAL) <= CAST(COALESCE(${products.minStock}, '1') AS DECIMAL)`
           )
         )
-        .limit(10)
+        .limit(20)
 
       return results
     } catch {

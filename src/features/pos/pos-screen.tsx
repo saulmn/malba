@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,7 +27,32 @@ type OrderItem = {
 export function PosScreen() {
   const { products, currentRegister, customers = [] } = Route.useLoaderData()
 
-  const [order, setOrder] = useState<OrderItem[]>([])
+  const storageKey = currentRegister ? `pos_ticket_${currentRegister.workspaceId}` : null
+
+  const [order, setOrder] = useState<OrderItem[]>(() => {
+    if (typeof window === 'undefined' || !currentRegister) return []
+    try {
+      const saved = localStorage.getItem(`pos_ticket_${currentRegister.workspaceId}`)
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        if (order.length > 0) {
+          localStorage.setItem(storageKey, JSON.stringify(order))
+        } else {
+          localStorage.removeItem(storageKey)
+        }
+      } catch (e) {
+        console.error('Error saving pos ticket to localStorage', e)
+      }
+    }
+  }, [order, storageKey])
+
   const [search, setSearch] = useState('')
   const [editingItem, setEditingItem] = useState<OrderItem | null>(null)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -101,6 +126,9 @@ export function PosScreen() {
         duration: 5000,
       })
       setOrder([])
+      if (typeof window !== 'undefined' && storageKey) {
+        localStorage.removeItem(storageKey)
+      }
       setIsCheckoutOpen(false)
     } catch (error) {
       toast.error("Error al procesar la venta")
@@ -188,7 +216,25 @@ export function PosScreen() {
         <CardHeader className="bg-muted/30 border-b p-4">
           <CardTitle className="text-lg flex justify-between items-center">
             <span>Ticket Actual</span>
-            <Badge variant="secondary">{order.length} artículos</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{order.length} artículos</Badge>
+              {order.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    if (confirm("¿Estás seguro de vaciar el ticket actual?")) {
+                      setOrder([])
+                      if (storageKey) localStorage.removeItem(storageKey)
+                    }
+                  }}
+                  title="Vaciar ticket actual"
+                >
+                  Vaciar
+                </Button>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         
