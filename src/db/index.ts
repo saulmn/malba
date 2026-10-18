@@ -5,7 +5,11 @@ import * as schema from './schema';
 const connectionString =
 	process.env.DATABASE_URL_POOLED ||
 	process.env.DATABASE_URL ||
-	'postgres://postgres:postgres@localhost:5432/pos_app';
+	'';
+
+if (!connectionString) {
+	console.error('DATABASE_URL is not set in environment variables!');
+}
 
 const client = neon(connectionString);
 export const db = drizzle(client, { schema });

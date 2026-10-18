@@ -5,11 +5,11 @@ import { randomBytes } from 'crypto'
 
 // Cloudflare R2 / AWS S3 Configuration
 // For Cloudflare R2: Endpoint is usually https://<account_id>.r2.cloudflarestorage.com
-const endpoint = process.env.S3_ENDPOINT || ''
-const region = process.env.S3_REGION || 'auto'
-const accessKeyId = process.env.S3_ACCESS_KEY_ID || ''
-const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY || ''
-const bucketName = process.env.S3_BUCKET_NAME || ''
+const endpoint = process.env.S3_ENDPOINT || process.env.AWS_ENDPOINT_URL_S3 || ''
+const region = process.env.S3_REGION || process.env.AWS_REGION || 'us-east-2'
+const accessKeyId = process.env.S3_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID || ''
+const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY || ''
+const bucketName = process.env.S3_BUCKET_NAME || process.env.S3_BUCKET || ''
 const publicUrl = process.env.S3_PUBLIC_URL || '' // Used to construct the final image URL
 
 const s3Client = new S3Client({
