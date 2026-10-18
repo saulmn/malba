@@ -183,6 +183,7 @@ export const transactions = pgTable("transactions", {
 	registerSessionId: integer("register_session_id")
 		.references(() => registerSessions.id)
 		.notNull(),
+	userId: integer("user_id").references(() => users.id),
 	customerId: integer("customer_id").references(() => customers.id, {
 		onDelete: "set null",
 	}),
@@ -310,6 +311,10 @@ export const transactionsRelations = relations(
 		registerSession: one(registerSessions, {
 			fields: [transactions.registerSessionId],
 			references: [registerSessions.id],
+		}),
+		user: one(users, {
+			fields: [transactions.userId],
+			references: [users.id],
 		}),
 		customer: one(customers, {
 			fields: [transactions.customerId],

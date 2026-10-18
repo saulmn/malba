@@ -2,3 +2,4 @@ allowBuilds:
   '@parcel/watcher': false
   esbuild: true
   lightningcss: true
+  workerd: true

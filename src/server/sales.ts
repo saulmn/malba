@@ -51,6 +51,7 @@ export const createSaleFn = createServerFn({ method: "POST" })
 			.insert(transactions)
 			.values({
 				registerSessionId: data.registerSessionId,
+				userId: auth.user.id,
 				customerId: data.customerId || null,
 				type: "income",
 				total: data.total.toString(),
@@ -134,7 +135,9 @@ export const getSalesHistoryFn = createServerFn({ method: "GET" })
 		}
 
 		if (targetUserId && targetUserId !== "all") {
-			conditions.push(eq(registerSessions.userId, Number(targetUserId)));
+			conditions.push(
+				sql`COALESCE(${transactions.userId}, ${registerSessions.userId}) = ${Number(targetUserId)}`,
+			);
 		}
 
 		// 3. Query sales across all cashiers of this active workspace
@@ -156,7 +159,13 @@ export const getSalesHistoryFn = createServerFn({ method: "GET" })
 				registerSessions,
 				eq(transactions.registerSessionId, registerSessions.id),
 			)
-			.leftJoin(users, eq(registerSessions.userId, users.id))
+			.leftJoin(
+				users,
+				eq(
+					sql`COALESCE(${transactions.userId}, ${registerSessions.userId})`,
+					users.id,
+				),
+			)
 			.leftJoin(customers, eq(transactions.customerId, customers.id))
 			.where(and(...conditions))
 			.orderBy(desc(transactions.createdAt));

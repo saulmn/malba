@@ -102,11 +102,11 @@ function AppSidebar() {
 
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+					<SidebarGroupLabel className="group-data-[collapsible=icon]:hidden mb-1 font-semibold text-xs tracking-wider uppercase text-muted-foreground/70">
 						Punto de Venta
 					</SidebarGroupLabel>
 					<SidebarGroupContent>
-						<SidebarMenu>
+						<SidebarMenu className="gap-2">
 							{menuItems.map((item) => {
 								const isActive =
 									location.pathname === item.url ||
@@ -118,8 +118,9 @@ function AppSidebar() {
 											tooltip={item.title}
 											isActive={isActive}
 											render={<Link to={item.url} />}
+											className="h-10 px-3 gap-3 rounded-lg font-medium transition-all duration-150 group-data-[collapsible=icon]:justify-center"
 										>
-											<item.icon className="size-4 shrink-0" />
+											<item.icon className="size-4.5 shrink-0" />
 											<span className="truncate group-data-[collapsible=icon]:hidden">
 												{item.title}
 											</span>
@@ -132,15 +133,15 @@ function AppSidebar() {
 				</SidebarGroup>
 			</SidebarContent>
 
-			<SidebarFooter className="border-t border-sidebar-border p-2">
+			<SidebarFooter className="border-t border-sidebar-border p-3">
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton
 							tooltip="Cerrar Sesión"
 							onClick={() => (window.location.href = "/login")}
-							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+							className="h-10 px-3 gap-3 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive font-medium transition-all duration-150 group-data-[collapsible=icon]:justify-center"
 						>
-							<LogOut className="size-4 shrink-0" />
+							<LogOut className="size-4.5 shrink-0" />
 							<span className="truncate group-data-[collapsible=icon]:hidden">
 								Cerrar Sesión
 							</span>

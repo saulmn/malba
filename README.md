@@ -91,4 +91,29 @@ El sistema maneja un esquema relacional optimizado para tiendas y puntos de vent
 - **`inventory`**: Tabla cruzada que lleva la cuenta exacta de `quantity` (existencias) por cada producto en una sucursal.
 - **`inventory_movements`**: Registro inmutable de cada entrada o salida de inventario (ventas, reabastecimiento, mermas).
 - **`register_sessions`**: Turnos o Cortes de Caja. Cada vendedor abre uno al llegar. Registra saldos iniciales, esperados, y diferencias (descuadres) al finalizar el turno.
-- **`transactions`** & **`transaction_items`**: Cada ticket o venta generada. Se relacionan con la sesión de caja activa para asegurar que cada venta se atribuye al cajero y turno correctos.
+- **`transactions`** & **`transaction_items`**: Cada ticket o venta generada. Se relacionan con la sesión de caja activa y el usuario logueado (`user_id`) para asegurar que cada venta se atribuye al cajero correcto.
+
+## ☁️ Despliegue en Cloudflare (Workers)
+
+La aplicación está preconfigurada con `@cloudflare/vite-plugin` y `wrangler.jsonc` para ejecutarse directamente en **Cloudflare Workers** con SSR completo y edge-rendering.
+
+1. **Configurar variables y secretos**:
+   Inicia sesión con tu cuenta de Cloudflare en la terminal:
+   ```bash
+   npx wrangler login
+   ```
+   Configura las variables de entorno en Cloudflare (por ejemplo tu base de datos Neon):
+   ```bash
+   npx wrangler secret put DATABASE_URL
+   npx wrangler secret put DATABASE_URL_POOLED
+   ```
+
+2. **Compilar y desplegar**:
+   Ejecuta el script de despliegue configurado:
+   ```bash
+   pnpm deploy
+   # O directamente:
+   pnpm build && npx wrangler deploy
+   ```
+   Wrangler compilará la aplicación y la publicará automáticamente en tu dominio de Cloudflare `*.workers.dev` o en tu dominio personalizado.
+
