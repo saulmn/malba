@@ -13,12 +13,20 @@ export const loginFn = createServerFn({ method: "POST" })
 	.validator((data: { identifier: string; password: string }) => data)
 	.handler(async ({ data }) => {
 		// 1. Find user by email OR username
-		const user = await db.query.users.findFirst({
-			where: or(
-				eq(users.email, data.identifier),
-				eq(users.username, data.identifier),
-			),
-		});
+		let user;
+		try {
+			user = await db.query.users.findFirst({
+				where: or(
+					eq(users.email, data.identifier),
+					eq(users.username, data.identifier),
+				),
+			});
+		} catch (err: any) {
+			console.error("Login error - database query failed:", err, err?.cause);
+			const causeMsg = err?.cause?.message || err?.cause;
+			const detail = causeMsg ? `: ${causeMsg}` : (err?.message ? `: ${err.message}` : "");
+			throw new Error(`Error al conectar con la base de datos${detail}`);
+		}
 
 		if (!user) {
 			throw new Error("Usuario no encontrado");
