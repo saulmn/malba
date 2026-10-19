@@ -13,5 +13,10 @@
   },
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "AWS_REGION": "us-east-2",
+    "AWS_SECRET_ACCESS_KEY": "nsk_live_45d75dd533af2890b9c8a2988d159ae668d77238c7d4fa65635926d334e48ccc",
+    "S3_BUCKET": "photos"
   }
 }
