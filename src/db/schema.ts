@@ -227,6 +227,26 @@ export const expenses = pgTable("expenses", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// 8. Retiros de Caja (Salidas de efectivo para auditoría y arqueo de caja)
+export const cashWithdrawals = pgTable("cash_withdrawals", {
+	id: serial("id").primaryKey(),
+	workspaceId: integer("workspace_id")
+		.references(() => workspaces.id)
+		.notNull(),
+	registerSessionId: integer("register_session_id")
+		.references(() => registerSessions.id)
+		.notNull(),
+	userId: integer("user_id")
+		.references(() => users.id)
+		.notNull(),
+	amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+	reason: text("reason").notNull(), // Ej: "Exceso de efectivo", "Depósito bancario", "Entrega a gerencia", etc.
+	description: text("description"), // Observaciones o detalle de para qué se retira
+	balanceBefore: numeric("balance_before", { precision: 12, scale: 2 }).notNull(),
+	balanceAfter: numeric("balance_after", { precision: 12, scale: 2 }).notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 import { relations } from "drizzle-orm";
 
 export const authSessionsRelations = relations(authSessions, ({ one }) => ({
@@ -244,6 +264,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 		references: [workspaces.id],
 	}),
 	expenses: many(expenses),
+	withdrawals: many(cashWithdrawals),
 }));
 
 export const workspacesRelations = relations(workspaces, ({ many }) => ({
@@ -255,6 +276,7 @@ export const workspacesRelations = relations(workspaces, ({ many }) => ({
 	customers: many(customers),
 	expenses: many(expenses),
 	categories: many(categories),
+	withdrawals: many(cashWithdrawals),
 }));
 
 export const categoriesRelations = relations(categories, ({ one }) => ({
@@ -355,6 +377,7 @@ export const registerSessionsRelations = relations(
 			references: [users.id],
 		}),
 		transactions: many(transactions),
+		withdrawals: many(cashWithdrawals),
 	}),
 );
 
@@ -371,3 +394,22 @@ export const transactionItemsRelations = relations(
 		}),
 	}),
 );
+
+export const cashWithdrawalsRelations = relations(
+	cashWithdrawals,
+	({ one }) => ({
+		workspace: one(workspaces, {
+			fields: [cashWithdrawals.workspaceId],
+			references: [workspaces.id],
+		}),
+		registerSession: one(registerSessions, {
+			fields: [cashWithdrawals.registerSessionId],
+			references: [registerSessions.id],
+		}),
+		user: one(users, {
+			fields: [cashWithdrawals.userId],
+			references: [users.id],
+		}),
+	}),
+);
+

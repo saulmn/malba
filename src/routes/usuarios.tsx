@@ -1,24 +1,37 @@
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import {
+	Edit2,
+	Plus,
+	Search,
+	ShieldAlert,
+	Store,
+	Trash2,
+	Users,
+} from "lucide-react";
 import { useState } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Plus, Edit2, Trash2, Store, Users, ShieldAlert, Search } from "lucide-react";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Input } from "@/components/ui/input";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { UserForm } from "@/features/users/user-form";
 import {
 	createUserFn,
-	updateUserFn,
 	deleteUserFn,
 	getUsersFn,
+	updateUserFn,
 } from "@/server/users";
 import { getWorkspacesFn } from "@/server/workspaces";
 
 export const Route = createFileRoute("/usuarios")({
+	beforeLoad: ({ context }) => {
+		if ((context as any)?.user?.role !== "master") {
+			throw redirect({ to: "/ventas" });
+		}
+	},
 	component: RouteComponent,
 	loader: async () => {
 		const [usersList, workspacesList] = await Promise.all([
@@ -35,7 +48,10 @@ function RouteComponent() {
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingUser, setEditingUser] = useState<any | null>(null);
-	const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<{
+		id: number;
+		name: string;
+	} | null>(null);
 	const [search, setSearch] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
@@ -98,11 +114,15 @@ function RouteComponent() {
 	const getRoleBadge = (role: string) => {
 		switch (role) {
 			case "master":
-				return <Badge className="bg-purple-600 hover:bg-purple-700">Master</Badge>;
+				return (
+					<Badge className="bg-purple-600 hover:bg-purple-700">Master</Badge>
+				);
 			case "admin":
 				return <Badge className="bg-blue-600 hover:bg-blue-700">Admin</Badge>;
 			case "manager":
-				return <Badge className="bg-amber-600 hover:bg-amber-700">Gerente</Badge>;
+				return (
+					<Badge className="bg-amber-600 hover:bg-amber-700">Gerente</Badge>
+				);
 			default:
 				return <Badge variant="secondary">Cajero / Staff</Badge>;
 		}
@@ -112,7 +132,9 @@ function RouteComponent() {
 		<div className="flex flex-col gap-6">
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Gestión de Usuarios</h1>
+					<h1 className="text-3xl font-bold tracking-tight">
+						Gestión de Usuarios
+					</h1>
 					<p className="text-sm text-muted-foreground mt-0.5">
 						Administra cuentas, roles y asignación a sucursales
 					</p>
@@ -124,7 +146,11 @@ function RouteComponent() {
 						setIsDialogOpen(open);
 						if (!open) setEditingUser(null);
 					}}
-					title={editingUser ? "Editar Usuario y Sucursales" : "Agregar Nuevo Usuario"}
+					title={
+						editingUser
+							? "Editar Usuario y Sucursales"
+							: "Agregar Nuevo Usuario"
+					}
 					trigger={
 						<Button className="flex items-center gap-2">
 							<Plus size={16} /> Nuevo Usuario
@@ -183,12 +209,22 @@ function RouteComponent() {
 						<table className="w-full text-sm text-left">
 							<thead className="bg-muted/30 border-b">
 								<tr>
-									<th className="px-4 py-3 font-medium text-foreground">Nombre y Usuario</th>
-									<th className="px-4 py-3 font-medium text-foreground">Correo</th>
+									<th className="px-4 py-3 font-medium text-foreground">
+										Nombre y Usuario
+									</th>
+									<th className="px-4 py-3 font-medium text-foreground">
+										Correo
+									</th>
 									<th className="px-4 py-3 font-medium text-foreground">Rol</th>
-									<th className="px-4 py-3 font-medium text-foreground">Sucursal Predeterminada</th>
-									<th className="px-4 py-3 font-medium text-foreground">Sucursales con Acceso</th>
-									<th className="px-4 py-3 font-medium text-foreground text-right">Acciones</th>
+									<th className="px-4 py-3 font-medium text-foreground">
+										Sucursal Predeterminada
+									</th>
+									<th className="px-4 py-3 font-medium text-foreground">
+										Sucursales con Acceso
+									</th>
+									<th className="px-4 py-3 font-medium text-foreground text-right">
+										Acciones
+									</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y">
@@ -205,7 +241,10 @@ function RouteComponent() {
 									</tr>
 								) : (
 									paginatedUsers.map((user) => (
-										<tr key={user.id} className="hover:bg-muted/40 transition-colors">
+										<tr
+											key={user.id}
+											className="hover:bg-muted/40 transition-colors"
+										>
 											<td className="px-4 py-3 font-medium">
 												<div className="flex flex-col">
 													<span className="text-foreground">{user.name}</span>
@@ -216,7 +255,9 @@ function RouteComponent() {
 													)}
 												</div>
 											</td>
-											<td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+											<td className="px-4 py-3 text-muted-foreground">
+												{user.email}
+											</td>
 											<td className="px-4 py-3">{getRoleBadge(user.role)}</td>
 											<td className="px-4 py-3">
 												{user.activeWorkspaceName ? (
@@ -232,13 +273,20 @@ function RouteComponent() {
 											</td>
 											<td className="px-4 py-3">
 												{user.role === "master" ? (
-													<Badge variant="outline" className="text-xs border-purple-500/30 text-purple-700 dark:text-purple-300">
+													<Badge
+														variant="outline"
+														className="text-xs border-purple-500/30 text-purple-700 dark:text-purple-300"
+													>
 														Todas (Master)
 													</Badge>
 												) : user.assignedWorkspaces.length > 0 ? (
 													<div className="flex flex-wrap gap-1">
 														{user.assignedWorkspaces.map((w: any) => (
-															<Badge key={w.id} variant="secondary" className="text-[11px] font-normal">
+															<Badge
+																key={w.id}
+																variant="secondary"
+																className="text-[11px] font-normal"
+															>
 																{w.name}
 															</Badge>
 														))}

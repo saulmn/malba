@@ -1,11 +1,34 @@
+import { useNavigate, useRouter } from "@tanstack/react-router";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+	Calendar,
+	Clock,
+	DollarSign,
+	Eye,
+	Receipt,
+	RefreshCw,
+	Search,
+	ShoppingBag,
+	Store,
+	User,
+	UserCheck,
+	Users,
+} from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
+	CardDescription,
 	CardHeader,
 	CardTitle,
-	CardDescription,
 } from "@/components/ui/card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Input } from "@/components/ui/input";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
 	Select,
 	SelectContent,
@@ -21,28 +44,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { formatCurrency, formatQuantity } from "@/utils/format";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { useNavigate } from "@tanstack/react-router";
-import {
-	Search,
-	DollarSign,
-	Receipt,
-	User,
-	Users,
-	Clock,
-	Calendar,
-	Eye,
-	ShoppingBag,
-	Store,
-	UserCheck,
-} from "lucide-react";
 
 export type SalePeriod =
 	| "today"
@@ -77,11 +79,25 @@ export function SalesHistoryScreen({
 	activeWorkspaceName,
 }: SalesHistoryScreenProps) {
 	const navigate = useNavigate({ from: "/mis-ventas" });
+	const router = useRouter();
 
+	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [search, setSearch] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
 	const [selectedSale, setSelectedSale] = useState<any | null>(null);
+
+	const handleRefresh = async () => {
+		setIsRefreshing(true);
+		try {
+			await router.invalidate();
+			toast.success("Historial de ventas actualizado correctamente");
+		} catch (error) {
+			toast.error("Error al actualizar ventas");
+		} finally {
+			setIsRefreshing(false);
+		}
+	};
 
 	const handlePeriodChange = (val: SalePeriod) => {
 		setCurrentPage(1);
@@ -101,8 +117,7 @@ export function SalesHistoryScreen({
 	const filteredSales = sales.filter((sale) => {
 		if (!search.trim()) return true;
 		const q = search.toLowerCase().trim();
-		const idMatch =
-			String(sale.id).includes(q) || `#${sale.id}`.includes(q);
+		const idMatch = String(sale.id).includes(q) || `#${sale.id}`.includes(q);
 		const itemsMatch = sale.itemsSummary?.toLowerCase().includes(q);
 		const cashierMatch = sale.userName?.toLowerCase().includes(q);
 		const customerMatch = sale.customerName?.toLowerCase().includes(q);
@@ -130,13 +145,30 @@ export function SalesHistoryScreen({
 			{/* Top Bar */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Historial de Ventas</h1>
+					<h1 className="text-3xl font-bold tracking-tight">
+						Historial de Ventas
+					</h1>
 					<p className="text-sm text-muted-foreground mt-0.5">
 						Registro y consulta de tickets de todos los cajeros en{" "}
 						<span className="font-medium text-foreground">
 							{activeWorkspaceName || "la sucursal"}
 						</span>
 					</p>
+				</div>
+
+				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						onClick={handleRefresh}
+						disabled={isRefreshing}
+						className="flex items-center gap-2"
+						title="Recargar historial de ventas"
+					>
+						<RefreshCw
+							className={`size-4 ${isRefreshing ? "animate-spin" : ""}`}
+						/>
+						<span className="hidden sm:inline">Recargar</span>
+					</Button>
 				</div>
 			</div>
 
@@ -165,7 +197,9 @@ export function SalesHistoryScreen({
 						<Receipt className="size-4 text-primary" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold text-foreground">{totalItems}</div>
+						<div className="text-2xl font-bold text-foreground">
+							{totalItems}
+						</div>
 						<p className="text-xs text-muted-foreground mt-1">
 							Operaciones de venta finalizadas
 						</p>
@@ -174,7 +208,9 @@ export function SalesHistoryScreen({
 
 				<Card>
 					<CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-						<CardTitle className="text-sm font-medium">Ticket Promedio</CardTitle>
+						<CardTitle className="text-sm font-medium">
+							Ticket Promedio
+						</CardTitle>
 						<ShoppingBag className="size-4 text-blue-600" />
 					</CardHeader>
 					<CardContent>
@@ -434,7 +470,9 @@ export function SalesHistoryScreen({
 										<TableHead className="text-xs">Cant.</TableHead>
 										<TableHead className="text-xs">Producto</TableHead>
 										<TableHead className="text-xs text-right">Precio</TableHead>
-										<TableHead className="text-xs text-right">Subtotal</TableHead>
+										<TableHead className="text-xs text-right">
+											Subtotal
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -451,7 +489,9 @@ export function SalesHistoryScreen({
 													{formatCurrency(Number(it.price))}
 												</TableCell>
 												<TableCell className="text-right font-medium">
-													{formatCurrency(Number(it.price) * Number(it.quantity))}
+													{formatCurrency(
+														Number(it.price) * Number(it.quantity),
+													)}
 												</TableCell>
 											</TableRow>
 										))

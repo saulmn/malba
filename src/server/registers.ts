@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { db } from '@/db'
-import { registerSessions, transactions } from '@/db/schema'
+import { registerSessions, transactions, cashWithdrawals, expenses, users } from '@/db/schema'
 import { eq, desc, and, sum, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { getAuthenticatedUserWithActiveStore } from './auth'
@@ -65,7 +65,78 @@ export const getRegisterTotalsFn = createServerFn({ method: 'GET' })
       if (stat.type === 'outcome') outcome = Number(stat.total || 0)
     }
 
-    return { income, outcome }
+    // Desglose de retiros
+    let withdrawals = 0
+    let withdrawalsCount = 0
+    let withdrawalsList: Array<{
+      id: number
+      amount: string
+      reason: string
+      description: string | null
+      balanceBefore: string
+      balanceAfter: string
+      createdAt: Date
+      userName: string | null
+    }> = []
+
+    try {
+      const [wStat] = await db
+        .select({
+          total: sql<string>`coalesce(sum(cast(${cashWithdrawals.amount} as numeric)), 0)`,
+          count: sql<string>`count(*)`,
+        })
+        .from(cashWithdrawals)
+        .where(eq(cashWithdrawals.registerSessionId, data.registerSessionId))
+
+      withdrawals = Number(wStat?.total || 0)
+      withdrawalsCount = Number(wStat?.count || 0)
+
+      withdrawalsList = await db
+        .select({
+          id: cashWithdrawals.id,
+          amount: cashWithdrawals.amount,
+          reason: cashWithdrawals.reason,
+          description: cashWithdrawals.description,
+          balanceBefore: cashWithdrawals.balanceBefore,
+          balanceAfter: cashWithdrawals.balanceAfter,
+          createdAt: cashWithdrawals.createdAt,
+          userName: users.name,
+        })
+        .from(cashWithdrawals)
+        .leftJoin(users, eq(cashWithdrawals.userId, users.id))
+        .where(eq(cashWithdrawals.registerSessionId, data.registerSessionId))
+        .orderBy(desc(cashWithdrawals.createdAt))
+    } catch (e) {
+      console.error('Error fetching register withdrawals in getRegisterTotalsFn:', e)
+    }
+
+    // Desglose de gastos en efectivo de caja
+    let registerExpenses = 0
+    try {
+      const [eStat] = await db
+        .select({
+          total: sql<string>`coalesce(sum(cast(${expenses.amount} as numeric)), 0)`,
+        })
+        .from(expenses)
+        .where(
+          and(
+            eq(expenses.registerSessionId, data.registerSessionId),
+            eq(expenses.paymentMethod, 'cash_register')
+          )
+        )
+      registerExpenses = Number(eStat?.total || 0)
+    } catch (e) {
+      console.error('Error fetching register expenses in getRegisterTotalsFn:', e)
+    }
+
+    return { 
+      income, 
+      outcome, 
+      withdrawals, 
+      withdrawalsCount, 
+      expenses: registerExpenses,
+      withdrawalsList 
+    }
   })
 
 export const closeRegisterFn = createServerFn({ method: 'POST' })

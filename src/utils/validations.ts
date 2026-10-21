@@ -87,3 +87,17 @@ export const expenseSchema = z.object({
 });
 
 export type ExpenseFormValues = z.infer<typeof expenseSchema>;
+
+export const cashWithdrawalSchema = z.object({
+	amount: z.coerce
+		.number({ invalid_type_error: "Ingresa un monto válido" })
+		.positive("El monto debe ser mayor a 0"),
+	reason: z.string().min(2, "Selecciona o escribe el motivo del retiro"),
+	description: z
+		.string()
+		.max(3000, "La descripción no puede superar 3000 caracteres")
+		.optional(),
+	registerSessionId: z.coerce.number().optional(),
+});
+
+export type CashWithdrawalFormValues = z.infer<typeof cashWithdrawalSchema>;

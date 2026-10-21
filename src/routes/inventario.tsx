@@ -1,21 +1,23 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import {
 	AlertTriangle,
-	Edit2,
-	Plus,
-	Search,
-	Truck,
-	ArrowUpDown,
-	ArrowUp,
 	ArrowDown,
+	ArrowUp,
+	ArrowUpDown,
+	Edit2,
 	Filter,
-	X,
 	Package,
-	Upload,
+	Plus,
+	RefreshCw,
+	Search,
 	Trash2,
+	Truck,
+	Upload,
+	X,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -24,13 +26,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { ProductForm } from "@/features/inventory/product-form";
+import { Input } from "@/components/ui/input";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { CSVImportDialog } from "@/features/inventory/csv-import-dialog";
+import { ProductForm } from "@/features/inventory/product-form";
+import { getCategoriesFn } from "@/server/categories";
 import {
 	createProductFn,
 	deleteProductFn,
@@ -38,9 +40,8 @@ import {
 	updateProductFn,
 } from "@/server/inventory";
 import { getSuppliersFn } from "@/server/suppliers";
-import { getCategoriesFn } from "@/server/categories";
-import { type ProductFormValues } from "@/utils/validations";
 import { formatCurrency } from "@/utils/format";
+import type { ProductFormValues } from "@/utils/validations";
 
 export const Route = createFileRoute("/inventario")({
 	component: RouteComponent,
@@ -67,6 +68,7 @@ function RouteComponent() {
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isImportOpen, setIsImportOpen] = useState(false);
+	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
 	const [deleteProductTarget, setDeleteProductTarget] = useState<{
 		id: number;
@@ -113,6 +115,18 @@ function RouteComponent() {
 		selectedCategory !== "all" ||
 		selectedSupplier !== "all" ||
 		stockStatus !== "all";
+
+	const handleRefresh = async () => {
+		setIsRefreshing(true);
+		try {
+			await router.invalidate();
+			toast.success("Inventario actualizado correctamente");
+		} catch (error) {
+			toast.error("Error al actualizar inventario");
+		} finally {
+			setIsRefreshing(false);
+		}
+	};
 
 	const handleSubmitProduct = async (formData: ProductFormValues) => {
 		try {
@@ -218,7 +232,9 @@ function RouteComponent() {
 				matchesStock = qty > 0;
 			}
 
-			return matchesSearch && matchesCategory && matchesSupplier && matchesStock;
+			return (
+				matchesSearch && matchesCategory && matchesSupplier && matchesStock
+			);
 		});
 
 		// Sort
@@ -235,7 +251,9 @@ function RouteComponent() {
 					comparison = (a.category || "").localeCompare(b.category || "");
 					break;
 				case "supplier":
-					comparison = (a.supplierName || "").localeCompare(b.supplierName || "");
+					comparison = (a.supplierName || "").localeCompare(
+						b.supplierName || "",
+					);
 					break;
 				case "quantity":
 					comparison = Number(a.quantity || 0) - Number(b.quantity || 0);
@@ -281,11 +299,25 @@ function RouteComponent() {
 				<div>
 					<h1 className="text-3xl font-bold tracking-tight">Inventario</h1>
 					<p className="text-sm text-muted-foreground mt-0.5">
-						Catálogo de productos, existencias en almacén y proveedores de la sucursal
+						Catálogo de productos, existencias en almacén y proveedores de la
+						sucursal
 					</p>
 				</div>
 
 				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						onClick={handleRefresh}
+						disabled={isRefreshing}
+						className="flex items-center gap-2"
+						title="Recargar inventario"
+					>
+						<RefreshCw
+							className={`size-4 ${isRefreshing ? "animate-spin" : ""}`}
+						/>
+						<span className="hidden sm:inline">Recargar</span>
+					</Button>
+
 					<ResponsiveDialog
 						open={isImportOpen}
 						onOpenChange={setIsImportOpen}
@@ -320,43 +352,45 @@ function RouteComponent() {
 							</Button>
 						}
 					>
-					<ProductForm
-						suppliers={suppliers}
-						categories={categories}
-						onSubmit={handleSubmitProduct}
-						onDelete={
-							editingItem
-								? () => {
-										const item = editingItem;
-										setIsDialogOpen(false);
-										handleDeleteProduct(item.id, item.name, true);
-									}
-								: undefined
-						}
-						onCancel={() => {
-							setIsDialogOpen(false);
-							setEditingItem(null);
-						}}
-						defaultValues={
-							editingItem
-								? {
-										name: editingItem.name,
-										category: editingItem.category || "",
-										price: Number(editingItem.price),
-										cost: Number(editingItem.cost),
-										margin: editingItem.margin ? Number(editingItem.margin) : 0,
-										quantity: Number(editingItem.quantity || 0),
-										notes: editingItem.notes || "",
-										unit: editingItem.unit,
-										supplierId: editingItem.supplierId || null,
-										minStock: editingItem.minStock
-											? Number(editingItem.minStock)
-											: 1,
-									}
-								: undefined
-						}
-					/>
-				</ResponsiveDialog>
+						<ProductForm
+							suppliers={suppliers}
+							categories={categories}
+							onSubmit={handleSubmitProduct}
+							onDelete={
+								editingItem
+									? () => {
+											const item = editingItem;
+											setIsDialogOpen(false);
+											handleDeleteProduct(item.id, item.name, true);
+										}
+									: undefined
+							}
+							onCancel={() => {
+								setIsDialogOpen(false);
+								setEditingItem(null);
+							}}
+							defaultValues={
+								editingItem
+									? {
+											name: editingItem.name,
+											category: editingItem.category || "",
+											price: Number(editingItem.price),
+											cost: Number(editingItem.cost),
+											margin: editingItem.margin
+												? Number(editingItem.margin)
+												: 0,
+											quantity: Number(editingItem.quantity || 0),
+											notes: editingItem.notes || "",
+											unit: editingItem.unit,
+											supplierId: editingItem.supplierId || null,
+											minStock: editingItem.minStock
+												? Number(editingItem.minStock)
+												: 1,
+										}
+									: undefined
+							}
+						/>
+					</ResponsiveDialog>
 				</div>
 			</div>
 

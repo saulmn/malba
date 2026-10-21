@@ -9,10 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import {
-	BarChart,
-	FileText,
 	History,
-	Home,
+	LayoutDashboard,
 	LogOut,
 	Package,
 	Receipt,
@@ -69,22 +67,32 @@ export const Route = createRootRoute({
 	shellComponent: RootDocument,
 });
 
-const menuItems = [
-	{ title: "Inicio", url: "/", icon: Home },
+interface MenuItem {
+	title: string;
+	url: string;
+	icon: any;
+	masterOnly?: boolean;
+}
+
+const menuItems: MenuItem[] = [
+	{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
 	{ title: "Ventas", url: "/ventas", icon: ShoppingCart },
 	{ title: "Historial de Ventas", url: "/mis-ventas", icon: History },
 	{ title: "Inventario", url: "/inventario", icon: Package },
 	{ title: "Proveedores", url: "/proveedores", icon: Truck },
 	{ title: "Clientes", url: "/clientes", icon: UserCheck },
 	{ title: "Gastos", url: "/gastos", icon: Receipt },
-	{ title: "Dashboard", url: "/dashboard", icon: BarChart },
-	{ title: "Sucursales", url: "/sucursales", icon: Store },
-	{ title: "Usuarios", url: "/usuarios", icon: Users },
-	{ title: "Configuración", url: "/config", icon: Settings },
+	{ title: "Sucursales", url: "/sucursales", icon: Store, masterOnly: true },
+	{ title: "Usuarios", url: "/usuarios", icon: Users, masterOnly: true },
+	{ title: "Configuración", url: "/config", icon: Settings, masterOnly: true },
 ];
 
-function AppSidebar() {
+function AppSidebar({ user }: { user?: any }) {
 	const location = useLocation();
+	const isMaster = user?.role === "master";
+	const visibleMenuItems = menuItems.filter(
+		(item) => !item.masterOnly || isMaster,
+	);
 
 	return (
 		<Sidebar collapsible="icon">
@@ -94,8 +102,12 @@ function AppSidebar() {
 						M
 					</div>
 					<div className="flex flex-col truncate group-data-[collapsible=icon]:hidden">
-						<span className="font-bold text-sm leading-tight text-sidebar-foreground">Malba</span>
-						<span className="text-[10px] text-muted-foreground leading-tight">Punto de Venta</span>
+						<span className="font-bold text-sm leading-tight text-sidebar-foreground">
+							Malba
+						</span>
+						<span className="text-[10px] text-muted-foreground leading-tight">
+							Punto de Venta
+						</span>
 					</div>
 				</div>
 			</SidebarHeader>
@@ -107,7 +119,7 @@ function AppSidebar() {
 					</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<SidebarMenu className="gap-2">
-							{menuItems.map((item) => {
+							{visibleMenuItems.map((item) => {
 								const isActive =
 									location.pathname === item.url ||
 									(item.url !== "/" && location.pathname.startsWith(item.url));
@@ -162,6 +174,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 function RootDocument({ children }: { children: React.ReactNode }) {
 	const location = useLocation();
 	const isLogin = location.pathname === "/login";
+	const routeContext = Route.useRouteContext();
+	const user = routeContext?.user;
 
 	return (
 		<html lang="es-MX" suppressHydrationWarning>
@@ -176,7 +190,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<TooltipProvider>
 						<SidebarProvider>
 							<div className="flex w-full h-screen overflow-hidden">
-								<AppSidebar />
+								<AppSidebar user={user} />
 								<main className="flex-1 overflow-y-auto flex flex-col">
 									<header className="px-4 h-14 flex shrink-0 items-center justify-between border-b bg-card">
 										<div className="flex items-center gap-3">
