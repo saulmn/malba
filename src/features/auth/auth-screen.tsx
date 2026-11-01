@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export function LoginScreen() {
 								placeholder="usuario o admin@ejemplo.com"
 								value={identifier}
 								onChange={(e) => setIdentifier(e.target.value)}
+								disabled={loading}
 								required
 							/>
 						</div>
@@ -82,13 +84,19 @@ export function LoginScreen() {
 								type="password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
+								disabled={loading}
 								required
 							/>
 						</div>
 					</CardContent>
 					<CardFooter>
-						<Button type="submit" className="w-full" disabled={loading}>
-							{loading ? "Iniciando..." : "Iniciar Sesión"}
+						<Button
+							type="submit"
+							className="w-full flex items-center justify-center gap-2"
+							disabled={loading}
+						>
+							{loading && <Loader2 className="size-4 animate-spin" />}
+							{loading ? "Iniciando sesión..." : "Iniciar Sesión"}
 						</Button>
 					</CardFooter>
 				</form>

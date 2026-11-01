@@ -25,7 +25,7 @@ type OrderItem = {
 	name: string;
 	price: number;
 	quantity: number;
-	unit: "piece" | "liter" | "kilo";
+	unit: "piece" | "liter" | "kilo" | "package";
 };
 
 export function PosScreen() {
@@ -102,15 +102,19 @@ export function PosScreen() {
 
 	const updateQuantity = (id: string, qty: number) => {
 		if (isNaN(qty) || qty <= 0) return;
+		const cleanQty = Number(
+			(Math.round((qty + Number.EPSILON) * 100) / 100).toFixed(2),
+		);
 		setOrder((prev) =>
-			prev.map((item) => (item.id === id ? { ...item, quantity: qty } : item)),
+			prev.map((item) =>
+				item.id === id ? { ...item, quantity: cleanQty } : item,
+			),
 		);
 		setEditingItem(null);
 	};
 
-	const total = order.reduce(
-		(acc, item) => acc + item.price * item.quantity,
-		0,
+	const total = Number(
+		order.reduce((acc, item) => acc + item.price * item.quantity, 0).toFixed(2),
 	);
 
 	const filteredProducts = products.filter((p) =>
@@ -319,7 +323,7 @@ export function PosScreen() {
 												onOpenChange={(open) => {
 													if (!open) setEditingItem(null);
 												}}
-												title={"Editar $({item.name})"}
+												title={`Editar ${item.name}`}
 												trigger={
 													<Button
 														variant="outline"

@@ -6,11 +6,13 @@ import {
 	Clock,
 	DollarSign,
 	Eye,
+	Loader2,
 	Receipt,
 	RefreshCw,
 	Search,
 	ShoppingBag,
 	Store,
+	Trash2,
 	User,
 	UserCheck,
 	Users,
@@ -26,6 +28,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -44,6 +47,8 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { isUserAdmin } from "@/server/auth";
+import { deleteSaleFn } from "@/server/sales";
 import { formatCurrency, formatQuantity } from "@/utils/format";
 
 export type SalePeriod =
@@ -81,11 +86,15 @@ export function SalesHistoryScreen({
 	const navigate = useNavigate({ from: "/mis-ventas" });
 	const router = useRouter();
 
+	const isAdmin = isUserAdmin(currentUser);
+
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [search, setSearch] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
 	const [selectedSale, setSelectedSale] = useState<any | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
@@ -96,6 +105,26 @@ export function SalesHistoryScreen({
 			toast.error("Error al actualizar ventas");
 		} finally {
 			setIsRefreshing(false);
+		}
+	};
+
+	const handleDeleteSale = async (saleId: number) => {
+		setIsDeleting(true);
+		try {
+			await deleteSaleFn({ data: { saleId } });
+			toast.success(
+				`Venta #${saleId} eliminada y productos devueltos al inventario`,
+			);
+			if (selectedSale?.id === saleId) {
+				setSelectedSale(null);
+			}
+			setDeleteTarget(null);
+			await router.invalidate();
+		} catch (error: any) {
+			console.error(error);
+			toast.error(error.message || "Error al eliminar la venta");
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
@@ -251,7 +280,7 @@ export function SalesHistoryScreen({
 					<div className="w-48">
 						<Select
 							value={currentUserId || "all"}
-							onValueChange={handleCashierChange}
+							onValueChange={(val) => handleCashierChange(val || "all")}
 						>
 							<SelectTrigger className="h-9 text-xs">
 								<SelectValue placeholder="Todos los cajeros" />
@@ -295,7 +324,7 @@ export function SalesHistoryScreen({
 							<TableHead>Cliente</TableHead>
 							<TableHead>Artículos Vendidos</TableHead>
 							<TableHead className="text-right">Monto Total</TableHead>
-							<TableHead className="w-[80px] text-right">Detalle</TableHead>
+							<TableHead className="w-[110px] text-right">Acciones</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -379,17 +408,31 @@ export function SalesHistoryScreen({
 										+{formatCurrency(Number(sale.total))}
 									</TableCell>
 
-									{/* Action button */}
+									{/* Action buttons */}
 									<TableCell className="text-right">
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-8 gap-1 text-xs"
-											onClick={() => setSelectedSale(sale)}
-										>
-											<Eye className="size-3.5" />
-											<span className="sr-only sm:not-sr-only">Ver</span>
-										</Button>
+										<div className="flex items-center justify-end gap-1">
+											<Button
+												variant="ghost"
+												size="sm"
+												className="h-8 gap-1 text-xs"
+												onClick={() => setSelectedSale(sale)}
+												title="Ver detalle del ticket"
+											>
+												<Eye className="size-3.5" />
+												<span className="sr-only sm:not-sr-only">Ver</span>
+											</Button>
+											{isAdmin && (
+												<Button
+													variant="ghost"
+													size="icon"
+													className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+													onClick={() => setDeleteTarget(sale)}
+													title="Eliminar venta (Solo administradores)"
+												>
+													<Trash2 className="size-3.5" />
+												</Button>
+											)}
+										</div>
 									</TableCell>
 								</TableRow>
 							))
@@ -519,7 +562,23 @@ export function SalesHistoryScreen({
 							</span>
 						</div>
 
-						<div className="flex justify-end pt-2">
+						<div className="flex items-center justify-between pt-2">
+							{isAdmin ? (
+								<Button
+									variant="ghost"
+									className="text-destructive hover:bg-destructive/10 text-xs gap-1.5 h-8"
+									onClick={() => {
+										const sale = selectedSale;
+										setSelectedSale(null);
+										setDeleteTarget(sale);
+									}}
+								>
+									<Trash2 className="size-3.5" />
+									Eliminar Venta
+								</Button>
+							) : (
+								<div />
+							)}
 							<Button
 								variant="outline"
 								onClick={() => setSelectedSale(null)}
@@ -531,6 +590,45 @@ export function SalesHistoryScreen({
 					</div>
 				)}
 			</ResponsiveDialog>
+
+			{/* Confirm Delete Sale Dialog */}
+			<ConfirmDialog
+				open={!!deleteTarget}
+				onOpenChange={(open) => {
+					if (!open && !isDeleting) setDeleteTarget(null);
+				}}
+				title={
+					deleteTarget
+						? `¿Eliminar Venta #${deleteTarget.id}?`
+						: "¿Eliminar Venta?"
+				}
+				description={
+					deleteTarget ? (
+						<div className="space-y-2">
+							<p>
+								Esta acción eliminará el ticket de venta por un monto de{" "}
+								<strong className="text-foreground">
+									{formatCurrency(Number(deleteTarget.total))}
+								</strong>
+								.
+							</p>
+							<p className="text-xs text-amber-700 dark:text-amber-300 font-medium bg-amber-500/10 p-2.5 rounded-md border border-amber-500/20 leading-relaxed">
+								📦 Los artículos vendidos se devolverán automáticamente al
+								inventario de la sucursal.
+							</p>
+						</div>
+					) : undefined
+				}
+				confirmText="Eliminar Venta"
+				variant="destructive"
+				icon="trash"
+				isLoading={isDeleting}
+				onConfirm={async () => {
+					if (deleteTarget) {
+						await handleDeleteSale(deleteTarget.id);
+					}
+				}}
+			/>
 		</div>
 	);
 }

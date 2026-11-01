@@ -13,11 +13,12 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Loader2 } from "lucide-react";
 
 interface ExpenseFormProps {
 	suppliers: Array<{ id: number; name: string }>;
 	hasOpenRegister: boolean;
-	onSubmit: (data: ExpenseFormValues) => void;
+	onSubmit: (data: ExpenseFormValues) => void | Promise<void>;
 	onCancel: () => void;
 }
 
@@ -49,8 +50,12 @@ export function ExpenseForm({
 
 	const selectedPaymentMethod = watch("paymentMethod");
 
+	const onFormSubmit = async (data: ExpenseFormValues) => {
+		await onSubmit(data);
+	};
+
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+		<form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
 			<div className="space-y-2">
 				<Label htmlFor="title">Concepto / Título del Gasto *</Label>
 				<Input
@@ -110,9 +115,7 @@ export function ExpenseForm({
 									<SelectItem value="transfer">
 										Transferencia Bancaria
 									</SelectItem>
-									<SelectItem value="card">
-										Tarjeta Débito / Crédito
-									</SelectItem>
+									<SelectItem value="card">Tarjeta Débito / Crédito</SelectItem>
 									<SelectItem value="other">Otro / Crédito</SelectItem>
 								</SelectContent>
 							</Select>
@@ -175,7 +178,12 @@ export function ExpenseForm({
 				>
 					Cancelar
 				</Button>
-				<Button type="submit" disabled={isSubmitting}>
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="flex items-center gap-2"
+				>
+					{isSubmitting && <Loader2 className="size-4 animate-spin" />}
 					{isSubmitting ? "Registrando..." : "Registrar Gasto"}
 				</Button>
 			</div>

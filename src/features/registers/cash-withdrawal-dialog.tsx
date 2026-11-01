@@ -9,6 +9,7 @@ import {
 	Clock,
 	DollarSign,
 	History,
+	Loader2,
 	Printer,
 	User,
 } from "lucide-react";
@@ -385,7 +386,12 @@ export function CashWithdrawalDialog({
 					{/* Actions */}
 					<div className="flex justify-end gap-2 pt-3">
 						{onClose && (
-							<Button type="button" variant="outline" onClick={onClose}>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={onClose}
+								disabled={loading}
+							>
 								Cancelar
 							</Button>
 						)}
@@ -394,8 +400,17 @@ export function CashWithdrawalDialog({
 							disabled={loading || !isValid}
 							className="flex items-center gap-2"
 						>
-							<ArrowUpRight className="size-4" />
-							{loading ? "Registrando..." : "Confirmar y Retirar"}
+							{loading ? (
+								<>
+									<Loader2 className="size-4 animate-spin" />
+									Registrando...
+								</>
+							) : (
+								<>
+									<ArrowUpRight className="size-4" />
+									Confirmar y Retirar
+								</>
+							)}
 						</Button>
 					</div>
 				</form>

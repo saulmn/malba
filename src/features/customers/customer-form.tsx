@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { customerSchema, type CustomerFormValues } from "@/utils/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Label } from "@/components/ui/label";
 
 interface CustomerFormProps {
 	initialData?: Partial<CustomerFormValues>;
-	onSubmit: (data: CustomerFormValues) => void;
+	onSubmit: (data: CustomerFormValues) => void | Promise<void>;
 	onCancel: () => void;
 }
 
@@ -34,8 +35,12 @@ export function CustomerForm({
 		},
 	});
 
+	const onFormSubmit = async (data: CustomerFormValues) => {
+		await onSubmit(data);
+	};
+
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+		<form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
 			<div className="space-y-2">
 				<Label htmlFor="name">Nombre del Cliente *</Label>
 				<Input
@@ -130,7 +135,12 @@ export function CustomerForm({
 				>
 					Cancelar
 				</Button>
-				<Button type="submit" disabled={isSubmitting}>
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="flex items-center gap-2"
+				>
+					{isSubmitting && <Loader2 className="size-4 animate-spin" />}
 					{isSubmitting ? "Guardando..." : "Guardar Cliente"}
 				</Button>
 			</div>

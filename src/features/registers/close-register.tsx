@@ -1,6 +1,7 @@
 import { useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,6 +130,7 @@ export function CloseRegisterForm({
 					min="0"
 					value={physicalCash}
 					onChange={(e) => setPhysicalCash(e.target.value)}
+					disabled={loading}
 					required
 					autoFocus
 				/>
@@ -144,11 +146,22 @@ export function CloseRegisterForm({
 			)}
 
 			<div className="flex gap-2 justify-end pt-4">
-				<Button type="button" variant="outline" onClick={onCancel}>
+				<Button
+					type="button"
+					variant="outline"
+					onClick={onCancel}
+					disabled={loading}
+				>
 					Cancelar
 				</Button>
-				<Button type="submit" variant="destructive" disabled={loading}>
-					Realizar Corte y Cerrar
+				<Button
+					type="submit"
+					variant="destructive"
+					disabled={loading}
+					className="flex items-center gap-2"
+				>
+					{loading && <Loader2 className="size-4 animate-spin" />}
+					{loading ? "Cerrando Caja..." : "Realizar Corte y Cerrar"}
 				</Button>
 			</div>
 		</form>

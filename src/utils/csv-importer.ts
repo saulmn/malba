@@ -141,7 +141,7 @@ export function parseQuantityAndUnit(
 	const cleaned = str.replace(/[^\d.-]/g, "");
 	const qty = parseFloat(cleaned);
 	return {
-		quantity: isNaN(qty) ? 0 : Number(qty.toFixed(3)),
+		quantity: isNaN(qty) ? 0 : Number(qty.toFixed(2)),
 		unit,
 	};
 }
@@ -285,7 +285,9 @@ export function transformRowsToProducts(
 			items: [],
 			totalDetectedRows: 0,
 			skippedRows: 0,
-			warnings: ["No se pudo identificar la columna con el nombre del producto."],
+			warnings: [
+				"No se pudo identificar la columna con el nombre del producto.",
+			],
 		};
 	}
 
@@ -307,7 +309,10 @@ export function transformRowsToProducts(
 
 		// Product name check
 		const rawName = (row[mapping.nameCol] || "").trim();
-		if (!rawName || /^(LISTA PRODUCTOS PENDIENTES|PENDIENTES|TOTAL)$/i.test(rawName)) {
+		if (
+			!rawName ||
+			/^(LISTA PRODUCTOS PENDIENTES|PENDIENTES|TOTAL)$/i.test(rawName)
+		) {
 			// This row might be a category or supplier separator header
 			skippedRows++;
 			continue;
@@ -326,12 +331,10 @@ export function transformRowsToProducts(
 		const supplierName = currentSupplier || options.defaultSupplier.trim();
 
 		// Cost
-		const cost =
-			mapping.costCol !== -1 ? cleanPrice(row[mapping.costCol]) : 0;
+		const cost = mapping.costCol !== -1 ? cleanPrice(row[mapping.costCol]) : 0;
 
 		// Price & Margin
-		let price =
-			mapping.priceCol !== -1 ? cleanPrice(row[mapping.priceCol]) : 0;
+		let price = mapping.priceCol !== -1 ? cleanPrice(row[mapping.priceCol]) : 0;
 
 		// Intelligent fallback for price if empty or 0:
 		if (price === 0 && mapping.marginCol !== -1 && row[mapping.marginCol]) {

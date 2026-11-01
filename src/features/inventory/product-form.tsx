@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 
 interface ProductFormProps {
-	onSubmit: (data: ProductFormValues) => void;
+	onSubmit: (data: ProductFormValues) => void | Promise<void>;
 	onCancel?: () => void;
 	onDelete?: () => void;
 	defaultValues?: Partial<ProductFormValues>;
@@ -32,7 +32,7 @@ export function ProductForm({
 		setValue,
 		getValues,
 		control,
-		formState: { errors },
+		formState: { errors, isSubmitting },
 	} = useForm<ProductFormValues>({
 		// @ts-expect-error Zod resolver typing mismatch
 		resolver: zodResolver(productSchema),
@@ -42,13 +42,19 @@ export function ProductForm({
 			cost: defaultValues?.cost !== undefined ? defaultValues.cost : 0,
 			margin: defaultValues?.margin !== undefined ? defaultValues.margin : 0,
 			price: defaultValues?.price !== undefined ? defaultValues.price : 0,
-			quantity: defaultValues?.quantity !== undefined ? defaultValues.quantity : 0,
-			minStock: defaultValues?.minStock !== undefined ? defaultValues.minStock : 1,
+			quantity:
+				defaultValues?.quantity !== undefined ? defaultValues.quantity : 0,
+			minStock:
+				defaultValues?.minStock !== undefined ? defaultValues.minStock : 1,
 			unit: defaultValues?.unit || "piece",
 			supplierId: defaultValues?.supplierId || null,
 			notes: defaultValues?.notes || "",
 		},
 	});
+
+	const onFormSubmit = async (data: ProductFormValues) => {
+		await onSubmit(data);
+	};
 
 	const handleCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const cost = parseFloat(e.target.value) || 0;
@@ -89,7 +95,7 @@ export function ProductForm({
 	];
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
+		<form onSubmit={handleSubmit(onFormSubmit as any)} className="space-y-4">
 			<div className="space-y-2">
 				<Label htmlFor="name">Nombre del Producto *</Label>
 				<Input
@@ -122,7 +128,9 @@ export function ProductForm({
 						)}
 					/>
 					{errors.category && (
-						<p className="text-xs text-destructive">{errors.category.message}</p>
+						<p className="text-xs text-destructive">
+							{errors.category.message}
+						</p>
 					)}
 				</div>
 
@@ -209,7 +217,10 @@ export function ProductForm({
 			{/* Stock & Unit Details */}
 			<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 				<div className="space-y-1.5">
-					<Label htmlFor="quantity" className="text-xs font-semibold text-primary">
+					<Label
+						htmlFor="quantity"
+						className="text-xs font-semibold text-primary"
+					>
 						Existencias en Inventario *
 					</Label>
 					<Input
@@ -221,7 +232,9 @@ export function ProductForm({
 						placeholder="0"
 					/>
 					{errors.quantity && (
-						<p className="text-xs text-destructive">{errors.quantity.message}</p>
+						<p className="text-xs text-destructive">
+							{errors.quantity.message}
+						</p>
 					)}
 				</div>
 
@@ -237,7 +250,9 @@ export function ProductForm({
 						{...register("minStock")}
 					/>
 					{errors.minStock && (
-						<p className="text-xs text-destructive">{errors.minStock.message}</p>
+						<p className="text-xs text-destructive">
+							{errors.minStock.message}
+						</p>
 					)}
 				</div>
 
@@ -282,7 +297,8 @@ export function ProductForm({
 				</Label>
 				<Input id="image" type="file" accept="image/*" {...register("image")} />
 				<p className="text-[11px] text-muted-foreground">
-					Sube una imagen para identificar rápidamente el producto en la caja del POS.
+					Sube una imagen para identificar rápidamente el producto en la caja
+					del POS.
 				</p>
 			</div>
 
@@ -293,6 +309,7 @@ export function ProductForm({
 						variant="ghost"
 						className="text-destructive hover:bg-destructive/10 text-xs gap-1.5 h-9"
 						onClick={onDelete}
+						disabled={isSubmitting}
 					>
 						<Trash2 size={14} /> Eliminar Producto
 					</Button>
@@ -301,11 +318,23 @@ export function ProductForm({
 				)}
 				<div className="flex items-center gap-2">
 					{onCancel && (
-						<Button type="button" variant="outline" onClick={onCancel}>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={onCancel}
+							disabled={isSubmitting}
+						>
 							Cancelar
 						</Button>
 					)}
-					<Button type="submit">Guardar Producto</Button>
+					<Button
+						type="submit"
+						disabled={isSubmitting}
+						className="flex items-center gap-2"
+					>
+						{isSubmitting && <Loader2 className="size-4 animate-spin" />}
+						{isSubmitting ? "Guardando..." : "Guardar Producto"}
+					</Button>
 				</div>
 			</div>
 		</form>

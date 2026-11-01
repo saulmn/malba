@@ -10,7 +10,7 @@ import {
 	workspaceUsers,
 } from "@/db/schema";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
-import { getAuthenticatedUserWithActiveStore } from "./auth";
+import { getAuthenticatedUserWithActiveStore, isUserAdmin } from "./auth";
 
 type CheckoutPayload = {
 	items: Array<{ productId: number; quantity: number; price: number }>;
@@ -202,8 +202,7 @@ export const getSalesHistoryFn = createServerFn({ method: "GET" })
 				itms.length > 0
 					? itms
 							.map(
-								(i) =>
-									`${Number(i.quantity)}x ${i.productName || "Producto"}`,
+								(i) => `${Number(i.quantity)}x ${i.productName || "Producto"}`,
 							)
 							.join(", ")
 					: s.description || "Venta POS";
@@ -258,8 +257,7 @@ export const getSalesHistoryFn = createServerFn({ method: "GET" })
 		return {
 			sales,
 			cashiers,
-			activeWorkspaceName:
-				auth.user.activeWorkspace?.name || "Sucursal Activa",
+			activeWorkspaceName: auth.user.activeWorkspace?.name || "Sucursal Activa",
 		};
 	});
 
@@ -273,4 +271,91 @@ export const getMySalesFn = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		const result = await getSalesHistoryFn({ data });
 		return result.sales;
+	});
+
+export const deleteSaleFn = createServerFn({ method: "POST" })
+	.validator((data: { saleId: number }) => data)
+	.handler(async ({ data }) => {
+		const auth = await getAuthenticatedUserWithActiveStore();
+		const currentUser = auth.user;
+
+		// Only admins can delete sales
+		if (!isUserAdmin(currentUser)) {
+			throw new Error(
+				"Solo los administradores tienen permisos para eliminar ventas.",
+			);
+		}
+
+		// 1. Fetch sale to ensure it exists and get workspaceId
+		const [sale] = await db
+			.select({
+				id: transactions.id,
+				registerSessionId: transactions.registerSessionId,
+				workspaceId: registerSessions.workspaceId,
+				total: transactions.total,
+			})
+			.from(transactions)
+			.innerJoin(
+				registerSessions,
+				eq(transactions.registerSessionId, registerSessions.id),
+			)
+			.where(
+				and(eq(transactions.id, data.saleId), eq(transactions.type, "income")),
+			);
+
+		if (!sale) {
+			throw new Error("La venta no existe o ya fue eliminada.");
+		}
+
+		// Workspace authorization check
+		if (
+			currentUser.role !== "master" &&
+			sale.workspaceId !== auth.activeStoreId
+		) {
+			const wu = await db.query.workspaceUsers.findFirst({
+				where: and(
+					eq(workspaceUsers.userId, currentUser.id),
+					eq(workspaceUsers.workspaceId, sale.workspaceId),
+				),
+			});
+			if (wu?.role !== "admin") {
+				throw new Error(
+					"No tienes permisos para eliminar ventas de esta sucursal.",
+				);
+			}
+		}
+
+		// 2. Fetch items for this sale
+		const items = await db
+			.select({
+				id: transactionItems.id,
+				productId: transactionItems.productId,
+				quantity: transactionItems.quantity,
+			})
+			.from(transactionItems)
+			.where(eq(transactionItems.transactionId, data.saleId));
+
+		// 3. Revert inventory (return sold quantities back to warehouse stock)
+		for (const item of items) {
+			if (item.productId) {
+				await db.execute(sql`
+					UPDATE inventory 
+					SET quantity = quantity + ${item.quantity} 
+					WHERE product_id = ${item.productId} AND workspace_id = ${sale.workspaceId}
+				`);
+			}
+		}
+
+		// 4. Delete transaction items first
+		await db
+			.delete(transactionItems)
+			.where(eq(transactionItems.transactionId, data.saleId));
+
+		// 5. Delete transaction record
+		await db.delete(transactions).where(eq(transactions.id, data.saleId));
+
+		return {
+			success: true,
+			deletedSaleId: data.saleId,
+		};
 	});

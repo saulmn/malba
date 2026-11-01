@@ -24,7 +24,11 @@ export const loginFn = createServerFn({ method: "POST" })
 		} catch (err: any) {
 			console.error("Login error - database query failed:", err, err?.cause);
 			const causeMsg = err?.cause?.message || err?.cause;
-			const detail = causeMsg ? `: ${causeMsg}` : (err?.message ? `: ${err.message}` : "");
+			const detail = causeMsg
+				? `: ${causeMsg}`
+				: err?.message
+					? `: ${err.message}`
+					: "";
 			throw new Error(`Error al conectar con la base de datos${detail}`);
 		}
 
@@ -115,6 +119,7 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(
 				user: {
 					with: {
 						activeWorkspace: true,
+						workspaceUsers: true,
 					},
 				},
 			},
@@ -173,4 +178,16 @@ export async function getAuthenticatedUserWithActiveStore() {
 		user,
 		activeStoreId: user.activeStore,
 	};
+}
+
+export function isUserAdmin(user: any): boolean {
+	if (!user) return false;
+	if (user.role === "master" || user.role === "admin") return true;
+	if (user.workspaceUsers && user.activeStore) {
+		const wu = user.workspaceUsers.find(
+			(item: any) => item.workspaceId === user.activeStore,
+		);
+		if (wu?.role === "admin") return true;
+	}
+	return false;
 }

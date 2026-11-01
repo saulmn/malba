@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { supplierSchema, type SupplierFormValues } from "@/utils/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Label } from "@/components/ui/label";
 
 interface SupplierFormProps {
 	initialData?: Partial<SupplierFormValues>;
-	onSubmit: (data: SupplierFormValues) => void;
+	onSubmit: (data: SupplierFormValues) => void | Promise<void>;
 	onCancel: () => void;
 }
 
@@ -35,8 +36,12 @@ export function SupplierForm({
 		},
 	});
 
+	const onFormSubmit = async (data: SupplierFormValues) => {
+		await onSubmit(data);
+	};
+
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+		<form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
 			<div className="space-y-2">
 				<Label htmlFor="name">Nombre del Proveedor *</Label>
 				<Input
@@ -143,7 +148,12 @@ export function SupplierForm({
 				>
 					Cancelar
 				</Button>
-				<Button type="submit" disabled={isSubmitting}>
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="flex items-center gap-2"
+				>
+					{isSubmitting && <Loader2 className="size-4 animate-spin" />}
 					{isSubmitting ? "Guardando..." : "Guardar Proveedor"}
 				</Button>
 			</div>

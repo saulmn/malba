@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema, type UserFormValues } from "@/utils/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Store, ShieldCheck } from "lucide-react";
+import { Store, ShieldCheck, Loader2 } from "lucide-react";
 
 interface WorkspaceOption {
 	id: number;
@@ -20,7 +20,12 @@ interface UserFormProps {
 		assignedWorkspaceIds?: number[];
 	};
 	workspaces: WorkspaceOption[];
-	onSubmit: (data: UserFormValues & { workspaceIds: number[]; activeStoreId: number | null }) => void;
+	onSubmit: (
+		data: UserFormValues & {
+			workspaceIds: number[];
+			activeStoreId: number | null;
+		},
+	) => void | Promise<void>;
 	onCancel?: () => void;
 }
 
@@ -33,11 +38,13 @@ export function UserForm({
 	const isEdit = !!initialData?.id;
 
 	const [selectedWorkspaces, setSelectedWorkspaces] = useState<number[]>(
-		initialData?.assignedWorkspaceIds || (initialData?.activeStoreId ? [initialData.activeStoreId] : []),
+		initialData?.assignedWorkspaceIds ||
+			(initialData?.activeStoreId ? [initialData.activeStoreId] : []),
 	);
 
 	const [activeStoreId, setActiveStoreId] = useState<number | null>(
-		initialData?.activeStoreId || (workspaces.length > 0 ? workspaces[0].id : null),
+		initialData?.activeStoreId ||
+			(workspaces.length > 0 ? workspaces[0].id : null),
 	);
 
 	const {
@@ -73,10 +80,13 @@ export function UserForm({
 		});
 	};
 
-	const onFormSubmit = (data: UserFormValues) => {
-		onSubmit({
+	const onFormSubmit = async (data: any) => {
+		await onSubmit({
 			...data,
-			workspaceIds: selectedRole === "master" ? workspaces.map((w) => w.id) : selectedWorkspaces,
+			workspaceIds:
+				selectedRole === "master"
+					? workspaces.map((w) => w.id)
+					: selectedWorkspaces,
 			activeStoreId: activeStoreId,
 		});
 	};
@@ -133,7 +143,9 @@ export function UserForm({
 						id="password"
 						type="password"
 						{...register("password")}
-						placeholder={isEdit ? "Dejar vacío para no cambiar" : "Mínimo 6 caracteres"}
+						placeholder={
+							isEdit ? "Dejar vacío para no cambiar" : "Mínimo 6 caracteres"
+						}
 					/>
 					{errors.password && (
 						<p className="text-xs text-destructive">
@@ -178,7 +190,8 @@ export function UserForm({
 
 				{selectedRole === "master" ? (
 					<p className="text-xs text-muted-foreground bg-muted/40 p-2.5 rounded-md border">
-						Como cuenta Master, este usuario tiene acceso a todas las sucursales del sistema de forma automática.
+						Como cuenta Master, este usuario tiene acceso a todas las sucursales
+						del sistema de forma automática.
 					</p>
 				) : (
 					<div className="space-y-1.5 max-h-36 overflow-y-auto rounded-md border p-2 bg-muted/20">
@@ -222,7 +235,9 @@ export function UserForm({
 				<select
 					id="activeStoreId"
 					value={activeStoreId ? String(activeStoreId) : ""}
-					onChange={(e) => setActiveStoreId(e.target.value ? Number(e.target.value) : null)}
+					onChange={(e) =>
+						setActiveStoreId(e.target.value ? Number(e.target.value) : null)
+					}
 					className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus:outline-hidden focus:ring-1 focus:ring-ring"
 				>
 					<option value="">Selecciona sucursal activa inicial</option>
@@ -236,7 +251,8 @@ export function UserForm({
 					))}
 				</select>
 				<p className="text-[11px] text-muted-foreground">
-					Es la sucursal que se activará automáticamente cuando este usuario inicie sesión en la app.
+					Es la sucursal que se activará automáticamente cuando este usuario
+					inicie sesión en la app.
 				</p>
 			</div>
 
@@ -251,7 +267,12 @@ export function UserForm({
 						Cancelar
 					</Button>
 				)}
-				<Button type="submit" disabled={isSubmitting}>
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="flex items-center gap-2"
+				>
+					{isSubmitting && <Loader2 className="size-4 animate-spin" />}
 					{isSubmitting
 						? "Guardando..."
 						: isEdit

@@ -18,7 +18,7 @@ import {
 interface ResponsiveDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  trigger: React.ReactElement
+  trigger?: React.ReactElement
   title: string
   children: React.ReactNode
 }
@@ -35,7 +35,7 @@ export function ResponsiveDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogTrigger render={trigger} />
+        {trigger && <DialogTrigger render={trigger} />}
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -48,7 +48,7 @@ export function ResponsiveDialog({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerTrigger render={trigger} />
+      {trigger && <DrawerTrigger render={trigger} />}
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>

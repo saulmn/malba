@@ -6,6 +6,7 @@ import {
 	redirect,
 	Scripts,
 	useLocation,
+	useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import {
@@ -176,6 +177,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 	const isLogin = location.pathname === "/login";
 	const routeContext = Route.useRouteContext();
 	const user = routeContext?.user;
+	const isNavigating = useRouterState({
+		select: (s) => s.status === "pending" || s.isLoading,
+	});
 
 	return (
 		<html lang="es-MX" suppressHydrationWarning>
@@ -184,6 +188,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<HeadContent />
 			</head>
 			<body className="font-sans antialiased bg-background text-foreground selection:bg-[#D1E8FF] selection:text-[#0B1957]">
+				{isNavigating && (
+					<div
+						className="fixed top-0 left-0 right-0 h-1 z-[99999] overflow-hidden bg-primary/20 pointer-events-none"
+						role="progressbar"
+						aria-label="Cargando..."
+					>
+						<div className="h-full bg-primary animate-pulse w-full" />
+					</div>
+				)}
 				{isLogin ? (
 					children
 				) : (
