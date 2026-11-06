@@ -15,6 +15,20 @@ import {
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Loader2 } from "lucide-react";
 
+const PAYMENT_METHODS = [
+	{ value: "cash_register", label: "Efectivo de Caja (Turno activo)" },
+	{ value: "transfer", label: "Transferencia Bancaria" },
+	{ value: "card", label: "Tarjeta Débito / Crédito" },
+	{ value: "other", label: "Otro / Crédito" },
+];
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+	cash_register: "Efectivo de Caja (Turno activo)",
+	transfer: "Transferencia Bancaria",
+	card: "Tarjeta Débito / Crédito",
+	other: "Otro / Crédito",
+};
+
 interface ExpenseFormProps {
 	suppliers: Array<{ id: number; name: string }>;
 	hasOpenRegister: boolean;
@@ -98,6 +112,7 @@ export function ExpenseForm({
 						name="paymentMethod"
 						render={({ field }) => (
 							<Select
+								items={PAYMENT_METHODS}
 								value={field.value}
 								onValueChange={(val) =>
 									field.onChange(
@@ -106,17 +121,19 @@ export function ExpenseForm({
 								}
 							>
 								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Selecciona método de pago" />
+									<SelectValue placeholder="Selecciona método de pago">
+										{(val: string | null) =>
+											(val && PAYMENT_METHOD_LABELS[val]) ||
+											"Selecciona método de pago"
+										}
+									</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="cash_register">
-										Efectivo de Caja (Turno activo)
-									</SelectItem>
-									<SelectItem value="transfer">
-										Transferencia Bancaria
-									</SelectItem>
-									<SelectItem value="card">Tarjeta Débito / Crédito</SelectItem>
-									<SelectItem value="other">Otro / Crédito</SelectItem>
+									{PAYMENT_METHODS.map((m) => (
+										<SelectItem key={m.value} value={m.value}>
+											{m.label}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						)}

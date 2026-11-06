@@ -10,6 +10,7 @@ import {
 	Plus,
 	RefreshCw,
 	Search,
+	Tags,
 	Trash2,
 	Truck,
 	Upload,
@@ -32,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { CSVImportDialog } from "@/features/inventory/csv-import-dialog";
 import { ProductForm } from "@/features/inventory/product-form";
+import { CategoriesManagerDialog } from "@/features/inventory/categories-manager-dialog";
 import { getCategoriesFn } from "@/server/categories";
 import {
 	createProductFn,
@@ -68,6 +70,7 @@ function RouteComponent() {
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isImportOpen, setIsImportOpen] = useState(false);
+	const [isCategoriesManagerOpen, setIsCategoriesManagerOpen] = useState(false);
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
 	const [deleteProductTarget, setDeleteProductTarget] = useState<{
@@ -318,6 +321,16 @@ function RouteComponent() {
 						<span className="hidden sm:inline">Recargar</span>
 					</Button>
 
+					<Button
+						variant="outline"
+						onClick={() => setIsCategoriesManagerOpen(true)}
+						className="flex items-center gap-2"
+						title="Gestionar categorías"
+					>
+						<Tags size={16} />
+						<span className="hidden sm:inline">Categorías</span>
+					</Button>
+
 					<ResponsiveDialog
 						open={isImportOpen}
 						onOpenChange={setIsImportOpen}
@@ -355,6 +368,7 @@ function RouteComponent() {
 						<ProductForm
 							suppliers={suppliers}
 							categories={categories}
+							onManageCategories={() => setIsCategoriesManagerOpen(true)}
 							onSubmit={handleSubmitProduct}
 							onDelete={
 								editingItem
@@ -743,6 +757,12 @@ function RouteComponent() {
 						await executeDeleteProduct(deleteProductTarget.id);
 					}
 				}}
+			/>
+
+			<CategoriesManagerDialog
+				open={isCategoriesManagerOpen}
+				onOpenChange={setIsCategoriesManagerOpen}
+				categories={categories}
 			/>
 		</div>
 	);

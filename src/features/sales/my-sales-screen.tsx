@@ -17,7 +17,7 @@ import {
 	UserCheck,
 	Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,24 @@ export type SalePeriod =
 	| "year"
 	| "all";
 
+const PERIOD_LABELS: Record<SalePeriod, string> = {
+	today: "Hoy",
+	yesterday: "Ayer",
+	week: "Esta semana",
+	month: "Este mes",
+	year: "Este año",
+	all: "Todo el historial",
+};
+
+const PERIOD_ITEMS = [
+	{ value: "today", label: "Hoy" },
+	{ value: "yesterday", label: "Ayer" },
+	{ value: "week", label: "Esta semana" },
+	{ value: "month", label: "Este mes" },
+	{ value: "year", label: "Este año" },
+	{ value: "all", label: "Todo el historial" },
+];
+
 interface CashierUser {
 	id: number;
 	name: string;
@@ -85,6 +103,19 @@ export function SalesHistoryScreen({
 }: SalesHistoryScreenProps) {
 	const navigate = useNavigate({ from: "/mis-ventas" });
 	const router = useRouter();
+
+	const cashierItems = useMemo(
+		() => [
+			{ value: "all", label: "Todos los cajeros" },
+			...cashiers.map((cashier) => ({
+				value: String(cashier.id),
+				label: cashier.username
+					? `${cashier.name} (@${cashier.username})`
+					: cashier.name,
+			})),
+		],
+		[cashiers],
+	);
 
 	const isAdmin = isUserAdmin(currentUser);
 
@@ -259,11 +290,16 @@ export function SalesHistoryScreen({
 					{/* Period Selector */}
 					<div className="w-44">
 						<Select
+							items={PERIOD_ITEMS}
 							value={currentPeriod}
 							onValueChange={(v) => handlePeriodChange(v as SalePeriod)}
 						>
 							<SelectTrigger className="h-9 text-xs">
-								<SelectValue placeholder="Periodo" />
+								<SelectValue placeholder="Periodo">
+									{(val: string | null) =>
+										(val && PERIOD_LABELS[val as SalePeriod]) || "Periodo"
+									}
+								</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="today">Hoy</SelectItem>
@@ -279,17 +315,31 @@ export function SalesHistoryScreen({
 					{/* Cashier / User Filter */}
 					<div className="w-48">
 						<Select
+							items={cashierItems}
 							value={currentUserId || "all"}
 							onValueChange={(val) => handleCashierChange(val || "all")}
 						>
 							<SelectTrigger className="h-9 text-xs">
-								<SelectValue placeholder="Todos los cajeros" />
+								<SelectValue placeholder="Todos los cajeros">
+									{(val: string | null) => {
+										if (!val || val === "all") return "Todos los cajeros";
+										const cashier = cashiers.find(
+											(c) => String(c.id) === String(val),
+										);
+										return cashier
+											? cashier.username
+												? `${cashier.name} (@${cashier.username})`
+												: cashier.name
+											: "Todos los cajeros";
+									}}
+								</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="all">Todos los cajeros</SelectItem>
 								{cashiers.map((cashier) => (
 									<SelectItem key={cashier.id} value={String(cashier.id)}>
 										{cashier.name}
+										{cashier.username ? ` (@${cashier.username})` : ""}
 									</SelectItem>
 								))}
 							</SelectContent>

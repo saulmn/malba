@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, type ProductFormValues } from "@/utils/validations";
@@ -7,12 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, Tags } from "lucide-react";
+import { createCategoryFn } from "@/server/categories";
+import { toast } from "sonner";
 
 interface ProductFormProps {
 	onSubmit: (data: ProductFormValues) => void | Promise<void>;
 	onCancel?: () => void;
 	onDelete?: () => void;
+	onManageCategories?: () => void;
 	defaultValues?: Partial<ProductFormValues>;
 	suppliers?: Array<{ id: number; name: string }>;
 	categories?: Array<{ id: number | string; name: string }>;
@@ -22,10 +25,18 @@ export function ProductForm({
 	onSubmit,
 	onCancel,
 	onDelete,
+	onManageCategories,
 	defaultValues,
 	suppliers = [],
 	categories = [],
 }: ProductFormProps) {
+	const [localCategories, setLocalCategories] = useState<
+		Array<{ id: number | string; name: string }>
+	>(categories);
+
+	useEffect(() => {
+		setLocalCategories(categories);
+	}, [categories]);
 	const {
 		register,
 		handleSubmit,
@@ -81,7 +92,48 @@ export function ProductForm({
 		}
 	};
 
-	const categoryOptions = categories.map((c) => ({
+	const handleCreateCategory = async (catName: string) => {
+		const cleanName = catName.trim();
+		if (!cleanName) return;
+
+		try {
+			const res = await createCategoryFn({ data: { name: cleanName } });
+			const resolvedName = res.name.trim();
+			setLocalCategories((prev) => {
+				if (
+					prev.some(
+						(c) => c.name.toLowerCase() === resolvedName.toLowerCase(),
+					)
+				) {
+					return prev;
+				}
+				return [...prev, { id: res.id, name: resolvedName }];
+			});
+			setValue("category", resolvedName, {
+				shouldValidate: true,
+				shouldDirty: true,
+			});
+			toast.success(`Categoría "${resolvedName}" creada correctamente`);
+		} catch (error: any) {
+			console.error("Error creating category:", error);
+			setValue("category", cleanName, {
+				shouldValidate: true,
+				shouldDirty: true,
+			});
+			setLocalCategories((prev) => {
+				if (
+					prev.some(
+						(c) => c.name.toLowerCase() === cleanName.toLowerCase(),
+					)
+				) {
+					return prev;
+				}
+				return [...prev, { id: `local-${cleanName}`, name: cleanName }];
+			});
+		}
+	};
+
+	const categoryOptions = localCategories.map((c) => ({
 		value: c.name,
 		label: c.name,
 	}));
@@ -111,7 +163,19 @@ export function ProductForm({
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				{/* Searchable / Reusable Category */}
 				<div className="space-y-2">
-					<Label>Categoría</Label>
+					<div className="flex items-center justify-between">
+						<Label>Categoría</Label>
+						{onManageCategories && (
+							<button
+								type="button"
+								onClick={onManageCategories}
+								className="text-xs text-primary hover:underline flex items-center gap-1 font-medium cursor-pointer"
+							>
+								<Tags className="size-3" />
+								<span>Gestionar</span>
+							</button>
+						)}
+					</div>
 					<Controller
 						control={control}
 						name="category"
@@ -119,6 +183,7 @@ export function ProductForm({
 							<SearchableSelect
 								value={field.value}
 								onChange={field.onChange}
+								onCreate={handleCreateCategory}
 								options={categoryOptions}
 								placeholder="Seleccionar o crear categoría..."
 								searchPlaceholder="Buscar o escribir categoría..."

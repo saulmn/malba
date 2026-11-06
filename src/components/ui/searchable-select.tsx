@@ -2,7 +2,6 @@ import * as React from "react";
 import { Check, ChevronDown, Plus, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "cn";
 
 export interface SearchableOption {
@@ -15,6 +14,7 @@ interface SearchableSelectProps {
 	options: SearchableOption[];
 	value?: string | number | null;
 	onChange: (value: string) => void;
+	onCreate?: (value: string) => Promise<void> | void;
 	placeholder?: string;
 	searchPlaceholder?: string;
 	emptyText?: string;
@@ -28,6 +28,7 @@ export function SearchableSelect({
 	options,
 	value,
 	onChange,
+	onCreate,
 	placeholder = "Seleccionar...",
 	searchPlaceholder = "Buscar...",
 	emptyText = "No se encontraron resultados",
@@ -43,17 +44,29 @@ export function SearchableSelect({
 
 	const selectedOption = options.find((opt) => opt.value === stringValue);
 
+	// If allowCreate is enabled and stringValue is present, make sure it is an available option
+	const effectiveOptions = React.useMemo(() => {
+		if (
+			allowCreate &&
+			stringValue &&
+			!options.some((opt) => opt.value === stringValue)
+		) {
+			return [{ value: stringValue, label: stringValue }, ...options];
+		}
+		return options;
+	}, [options, stringValue, allowCreate]);
+
 	const filteredOptions = React.useMemo(() => {
-		if (!query.trim()) return options;
+		if (!query.trim()) return effectiveOptions;
 		const q = query.toLowerCase().trim();
-		return options.filter(
+		return effectiveOptions.filter(
 			(opt) =>
 				opt.label.toLowerCase().includes(q) ||
 				(opt.sublabel && opt.sublabel.toLowerCase().includes(q)),
 		);
-	}, [options, query]);
+	}, [effectiveOptions, query]);
 
-	const exactMatch = options.some(
+	const exactMatch = effectiveOptions.some(
 		(opt) => opt.label.toLowerCase() === query.toLowerCase().trim(),
 	);
 
@@ -63,13 +76,36 @@ export function SearchableSelect({
 		setQuery("");
 	};
 
-	const handleCreate = () => {
+	const handleCreate = async () => {
 		if (!query.trim()) return;
 		const trimmed = query.trim();
-		onChange(trimmed);
+		if (onCreate) {
+			await onCreate(trimmed);
+		} else {
+			onChange(trimmed);
+		}
 		setOpen(false);
 		setQuery("");
 	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			if (allowCreate && query.trim() && !exactMatch) {
+				handleCreate();
+			} else if (filteredOptions.length > 0) {
+				handleSelect(filteredOptions[0].value);
+			}
+		}
+	};
+
+	const displayLabel = selectedOption
+		? selectedOption.label
+		: stringValue
+			? stringValue
+			: placeholder;
+
+	const hasValue = !!selectedOption || !!stringValue;
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -83,13 +119,11 @@ export function SearchableSelect({
 						disabled={disabled}
 						className={cn(
 							"flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs font-normal focus:outline-hidden focus:ring-1 focus:ring-ring",
-							!selectedOption && "text-muted-foreground",
+							!hasValue && "text-muted-foreground",
 							className,
 						)}
 					>
-						<span className="truncate">
-							{selectedOption ? selectedOption.label : placeholder}
-						</span>
+						<span className="truncate">{displayLabel}</span>
 						<ChevronDown className="size-4 shrink-0 opacity-50 ml-2" />
 					</Button>
 				}
@@ -104,6 +138,7 @@ export function SearchableSelect({
 						placeholder={searchPlaceholder}
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
+						onKeyDown={handleKeyDown}
 						autoFocus
 					/>
 				</div>
